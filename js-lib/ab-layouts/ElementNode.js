@@ -1,7 +1,7 @@
 'use strict';
 
 const abNodes = require('../ab-nodes');
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 
 class ElementNode extends Node
@@ -9,7 +9,7 @@ class ElementNode extends Node
 
     constructor(presets = {})
     { super();
-        abTypes.args(arguments, ElementNode.Presets);
+        abTypes.argsE(arguments, ElementNode.Presets);
 
         this._nodes = {};
 

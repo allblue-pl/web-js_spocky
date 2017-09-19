@@ -2,7 +2,7 @@
 
 const App = require('./App');
 
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 const Infos = require('../core/Infos');
 const Package  = require('../instances/Package');
@@ -15,7 +15,7 @@ Object.defineProperties(App, {
 
         constructor(app, infos)
         {
-            abTypes.args(arguments, App, Infos);
+            abTypes.argsE(arguments, App, Infos);
 
             this._app = app;
             this._infos = infos;

@@ -1,15 +1,20 @@
 'use strict';
 
+const abTypes = require('ab-types');
+
 const Module = require('../instances/Module');
 
 
 class ContainerInfo
 {
 
-    constructor(container_id, modules_map)
+    constructor(container_id, html_element, modules_map)
     {
+        abTypes.argsE(arguments, 'string', HTMLElement, Map);
+
         Object.defineProperties(this, {
             id: { value: container_id, },
+            htmlElement: { value: html_element, },
             rootModuleInfos: { value: [], },
         });
 

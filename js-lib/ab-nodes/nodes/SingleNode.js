@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../../ab-types');
+const abTypes = require('ab-types');
 
 const HtmlElement = require('../HtmlElement');
 const Node = require('../Node');
@@ -11,9 +11,9 @@ class SingleNode extends Node
 
     constructor(html_element_type)
     { super();
+        abTypes.argsE(arguments, 'string');
         abTypes.prop(this, SingleNode.PChildren, this);
         abTypes.prop(this, SingleNode.PCopyable, this, arguments);
-        abTypes.args(arguments, 'string');
 
         this._htmlElement = document.createElement(html_element_type);
     }
@@ -23,8 +23,6 @@ class SingleNode extends Node
     __onNodeActivate()
     {
         abTypes.assert(this.parentNode !== null, 'Parent node not set.');
-
-        console.log('Here', this.parentNode);
 
         HtmlElement.AddChild(this.parentNode.htmlElement, this._htmlElement,
                 this.nextHtmlElement);
@@ -78,7 +76,7 @@ Object.defineProperties(SingleNode, {
 
         copy(deep_copy)
         {
-            if (deep_copy && abTypes.implementsC(this.__node, Node.PChildren))
+            if (deep_copy && abTypes.implements(this.__node, Node.PChildren))
                 return this.__node.children.copy();
 
             return new SingleNode(this.__args[0]);

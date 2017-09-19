@@ -7,7 +7,7 @@ const Uri = require('../core/Uri');
 
 const Package = require('../instances/Package');
 
-const LayoutInfo = require('./Layout');
+const Layout = require('./Layout');
 
 
 class App
@@ -49,7 +49,7 @@ class App
             app_init_info.initFn(this);
 
         window.onpopstate = function() {
-            self._parseUri(self._getUri());
+            this._parseUri(this._getUri());
         };
         this._parseUri(this._getUri());
     }
@@ -73,7 +73,7 @@ class App
         if (!(layout_path in this._infos.layouts))
             throw new Error('Layout `' + layout_path + '` does not exist.');
 
-        let layout_info = this._spocky._$layoutInfos[layout_path];
+        let layout_info = this._infos.layouts[layout_path];
         if (layout_info.raw)
             return new Layout(layout_info.initFn());
         else
@@ -144,8 +144,9 @@ class App
             let init_fn = package_instance['$' + module_name];
             let root_module = new package_instance['$' + module_name]();
 
-            let root_node = new abNodes.RootNode(module_path_info.htmlElement);
+            let root_node = new abNodes.RootNode(container_info.htmlElement);
             let root_module_nodes = root_module._$viewable.getNodes();
+
             for (let i = 0; i < root_module_nodes.length; i++)
                 root_node.children.add(root_module_nodes[i]);
             root_node.activate();

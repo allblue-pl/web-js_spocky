@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 const HtmlElement = require('../HtmlElement');
 const Node = require('../Node');
@@ -16,7 +16,7 @@ class FieldNode extends Node
 
     set length(show_value)
     {
-        abTypes.args(arguments, 'boolean');
+        abTypes.argsE(arguments, 'boolean');
 
         if (show_value === this._show)
             return;

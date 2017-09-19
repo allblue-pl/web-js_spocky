@@ -7,7 +7,7 @@ class SpockyInstance
 {
 
     constructor(spocky)
-    { let self = this;
+    { 
         this._spocky = spocky;
 
         /* App Init */
@@ -18,7 +18,7 @@ class SpockyInstance
         /* / App Init */
 
         window.onpopstate = function() {
-            self.parseUri(self.getUri());
+            this.parseUri(this.getUri());
         };
         this.parseUri(this.getUri());
     }

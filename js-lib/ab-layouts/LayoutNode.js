@@ -1,7 +1,7 @@
 'use strict';
 
 const abNodes = require('../ab-nodes');
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 
 class LayoutNode extends abNodes.Node
@@ -16,7 +16,7 @@ class LayoutNode extends abNodes.Node
 
     setIds(id_nodes)
     {
-        abTypes.args(arguments, 'object');
+        abTypes.argsE(arguments, 'object');
 
         this._idNodes = id_nodes;
     }

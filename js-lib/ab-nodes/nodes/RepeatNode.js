@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../../ab-types');
+const abTypes = require('ab-types');
 
 const HtmlElement = require('../HtmlElement');
 const Node = require('../Node');
@@ -108,8 +108,8 @@ RepeatNode.InstanceNode =  class extends Node
 
     constructor(repeat_node)
     { super();
+        abTypes.argsE(arguments, RepeatNode);
         abTypes.prop(this, RepeatNode.InstanceNode.PChildren, this);
-        abTypes.args(arguments, RepeatNode);
 
         this._repeatNode = repeat_node;
     }

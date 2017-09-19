@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../../ab-types');
+const abTypes = require('ab-types');
 
 const Node = require('../Node');
 
@@ -15,7 +15,7 @@ class ShowNode extends Node
 
     set show(show_value)
     {
-        abTypes.args(arguments, 'boolean');
+        abTypes.argsE(arguments, 'boolean');
 
         if (show_value === this._show)
             return;

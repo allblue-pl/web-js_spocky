@@ -14,6 +14,12 @@ class HtmlElement
             parent_html_element.insertBefore(html_element, next_html_element);
     }
 
+    static ClearChildren(html_element)
+    {
+        while (html_element.firstChild)
+            html_element.removeChild(html_element.firstChild);
+    }
+
     static RemoveChild(parent_html_element, html_element)
     {
         parent_html_element.removeChild(html_element);

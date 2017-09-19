@@ -2,7 +2,7 @@
 
 const abLayouts = require('../ab-layouts');
 const abNodes = require('../ab-nodes');
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 
 class LayoutParser extends abLayouts.Parser
@@ -41,6 +41,7 @@ class LayoutParser extends abLayouts.Parser
         } else
             node = new abNodes.SingleNode(node_type);
 
+        console.log(node_type);
 
         abTypes.assert(node !== null, '`node` shouldn\'t be `null`.');
 

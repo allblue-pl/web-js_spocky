@@ -1,7 +1,8 @@
 'use strict';
 
-const abTypes = require('../../ab-types');
+const abTypes = require('ab-types');
 
+const HtmlElement = require('../HtmlElement');
 const Node = require('../Node');
 
 
@@ -10,8 +11,8 @@ class RootNode extends Node
 
     constructor(html_element)
     { super();
+        abTypes.argsE(arguments, HTMLElement);
         abTypes.prop(this, RootNode.PChildren, this);
-        abTypes.args(arguments, HTMLElement);
 
         this._htmlElement = html_element;
     }
@@ -20,9 +21,10 @@ class RootNode extends Node
     /* Node.IListener */
     __onNodeActivate()
     {
-        for (let i = 0; i < this.children.length; i++) {
+        HtmlElement.ClearChildren(this._htmlElement);
+
+        for (let i = 0; i < this.children.length; i++)
             this.children.get(i).activate();
-        }
     }
 
     __onNodeDeactivate()

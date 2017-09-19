@@ -1,7 +1,7 @@
 'use strict';
 
 const abNodes = require('../ab-nodes');
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 const LayoutNode = require('./LayoutNode');
 
@@ -16,7 +16,7 @@ class Parser
 
     parse(layout_content)
     {
-        abTypes.args(arguments, Array);
+        abTypes.argsE(arguments, Array);
 
         let layout_node = new LayoutNode();
         let id_nodes = {};
@@ -46,7 +46,7 @@ class Parser
                 else
                     parent_node.children.add(node);
 
-                if (abTypes.implementsC(node, abNodes.Node.PChildren)) {
+                if (abTypes.implements(node, abNodes.Node.PChildren)) {
                     parent_nodes_stack.push(node);
                     parent_node_contents_stack.push(node_info.content);
                 }
@@ -57,7 +57,7 @@ class Parser
         }
 
         layout_node.setIds(id_nodes);
-        
+
         return layout_node;
     }
 

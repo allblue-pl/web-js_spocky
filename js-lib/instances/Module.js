@@ -1,8 +1,9 @@
 'use strict';
 
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 const Viewable = require('../Viewable');
+const Layout = require('./Layout');
 
 
 class Module
@@ -31,12 +32,14 @@ class Module
     {
         if (value === null)
             this._view = null;
-        else if (abTypes.implementsC(value, Viewable))
+        else if (value instanceof Layout || value instanceof Module)
             this._view = value;
         else if (value instanceof Array)
             this._view = new Module.MultiView(value);
         else
-            throw new Error('`$view` must be an `Array` or implement `Viewable`.');
+            throw new Error(`$view must be a \`Module\`, \`Layout\` or \`Array\`.`);
+
+        
     }
 
 }
@@ -59,7 +62,7 @@ Object.defineProperties(Module, {
             }
 
             constructor()
-            { super(); let self = this;
+            { super();
                 abTypes.prop(this, Module);
                 abTypes.prop(this, Module.Viewable, this);
 
@@ -67,8 +70,8 @@ Object.defineProperties(Module, {
                     $path: { value: module_path, },
                     $name: { value: module_name },
                     $view: {
-                        get: () => { return self._$module.view_Get(); },
-                        set: (value) => { self._$module.view_Set(value); },
+                        get: () => { return this._$module.view_Get(); },
+                        set: (value) => { this._$module.view_Set(value); },
                     }
                 });
 
@@ -98,7 +101,7 @@ Object.defineProperties(Module, {
 
 
     Viewable: { value:
-    class extends Viewable {
+    class Module_Viewable extends Viewable {
 
         constructor(module_public)
         { super();
@@ -111,9 +114,7 @@ Object.defineProperties(Module, {
 
             if (view === null)
                 return [];
-            else if (abTypes.implementsC(view, Module.Viewable))
-                return view._$viewable.getNodes();
-            else if (view instanceof Module.MultiView)
+            else if (abTypes.implements(view, Viewable))
                 return view._$viewable.getNodes();
 
             abTypes.assert(false, '`view` does not implement `Viewable`.');

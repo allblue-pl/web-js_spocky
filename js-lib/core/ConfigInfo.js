@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 const Config = require('../instances/Config');
 const Infos = require('./Infos');
@@ -10,7 +10,7 @@ class ConfigInfo {
 
     constructor(infos)
     {
-        abTypes.args(arguments, Infos);
+        abTypes.argsE(arguments, Infos);
 
         Object.defineProperties(this, {
             useHash: { value: false, writable: true, },

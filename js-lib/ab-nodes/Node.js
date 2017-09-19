@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 
 
 class Node
@@ -76,7 +76,7 @@ Object.defineProperties(Node, {
     PChildren: { value:
     class Node_PChildren {
 
-        static get PropName() { return 'children'; }
+        static get Property() { return 'children'; }
 
 
         get length()
@@ -86,7 +86,7 @@ Object.defineProperties(Node, {
 
         constructor(node)
         {
-            abTypes.args(arguments, Node);
+            abTypes.argsE(arguments, Node);
 
             this.__node = node;
             this._children = [];
@@ -94,7 +94,7 @@ Object.defineProperties(Node, {
 
         add(child_node, next_node = null)
         {
-            abTypes.args(arguments, Node, Node);
+            abTypes.argsE(arguments, Node, Node);
 
             let insert_index = next_node === null ?
                     this._children.length : this._children.indexOf(next_node);
@@ -127,7 +127,7 @@ Object.defineProperties(Node, {
                     let child_node_copy = children.get(i).copyable.copy(false);
                     node_copy.children.add(child_node_copy);
 
-                    if (abTypes.implementsC(child_node_copy, Node.PChildren)) {
+                    if (abTypes.implements(child_node_copy, Node.PChildren)) {
                         node_copies_stack.push(child_node_copy);
                         children_stack.push(children.get(i).children);
                     }
@@ -164,7 +164,7 @@ Object.defineProperties(Node, {
 
     PCopyable: { value:
     class Node_PCopyable {
-        static get PropName() { return 'copyable'; }
+        static get Property() { return 'copyable'; }
 
 
         constructor(node, args)

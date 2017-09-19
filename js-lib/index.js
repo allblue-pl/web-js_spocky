@@ -1,7 +1,9 @@
 'use strict';
 
+const abTypes = require('ab-types');
+
+const abFields = require('./ab-fields');
 const abNodes = require('./ab-nodes');
-const abTypes = require('./ab-types');
 
 const App = require('./instances/App');
 const Config = require('./instances/Config');
@@ -25,6 +27,9 @@ const spocky = new class spocky
         return abTypes;
     }
 
+    get Fields() {
+        return abFields.ObjectField;
+    }
 
 
     constructor()
@@ -45,7 +50,7 @@ const spocky = new class spocky
 
     app(app_init_fn)
     {
-        abTypes.args(arguments, 'function');
+        abTypes.argsE(arguments, 'function');
 
         this._infos.appInits.push({
             initFn: app_init_fn,
@@ -54,7 +59,7 @@ const spocky = new class spocky
 
     config(init_fn)
     {
-        abTypes.args(arguments, 'function');
+        abTypes.argsE(arguments, 'function');
 
         this._infos.configs.push({
             initFn: init_fn,
@@ -63,7 +68,7 @@ const spocky = new class spocky
 
     ext(ext_init_fn)
     {
-        abTypes.args(arguments, 'function');
+        abTypes.argsE(arguments, 'function');
 
         this._infos.appInits.push({
             initFn:ext_init_fn,
@@ -71,7 +76,7 @@ const spocky = new class spocky
     }
 
     init(debug = false)
-    { let self = this;
+    {
         if (this._initialized)
             throw new Error('`spocky` already initialized.');
         this._initialized = true;
@@ -94,7 +99,7 @@ const spocky = new class spocky
 
     package(package_path, package_init_fn, package_prototype = null)
     {
-        abTypes.args(arguments, 'string', 'function', 'function');
+        abTypes.argsE(arguments, 'string', 'function', 'function');
 
         if (this._initialized)
             throw new Error('Cannot define package after initialization.');
@@ -122,7 +127,7 @@ const spocky = new class spocky
 
     _layout(layout_path, layout_init_fn, raw)
     {
-        abTypes.args(arguments, 'string', 'function', 'boolean');
+        abTypes.argsE(arguments, 'string', 'function', 'boolean');
 
         if (this._initialized)
             throw new Error('Cannot define layout after initialization.');

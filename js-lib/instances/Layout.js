@@ -1,7 +1,7 @@
 'use strict';
 
 const abNodes = require('../ab-nodes');
-const abTypes = require('../ab-types');
+const abTypes = require('ab-types');
 const abLayouts = require('../ab-layouts');
 
 const Viewable = require('../Viewable');
@@ -19,7 +19,7 @@ class Layout
 
     constructor(layout_node)
     {
-        abTypes.args(arguments, abLayouts.LayoutNode);
+        abTypes.argsE(arguments, abLayouts.LayoutNode);
         abTypes.prop(this, Layout.Viewable, layout_node);
     }
 

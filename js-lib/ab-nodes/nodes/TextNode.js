@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('../../ab-types');
+const abTypes = require('ab-types');
 
 const HtmlElement = require('../HtmlElement');
 const Node = require('../Node');
