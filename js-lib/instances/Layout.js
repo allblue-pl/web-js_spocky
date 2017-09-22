@@ -13,14 +13,23 @@ class Layout
 
     static Parse(layout_content)
     {
-        return new Layout(Layout.Parser.parse(layout_content));
+        let layout_node = Layout.Parser.parse(layout_content);
+        let fields = Layout.Parser.getFields();
+
+        return new Layout(layout_node, fields);
     }
 
 
-    constructor(layout_node)
+    get fields() {
+        return this._fields;
+    }
+
+    constructor(layout_node, fields)
     {
         abTypes.argsE(arguments, abLayouts.LayoutNode);
         abTypes.prop(this, Layout.Viewable, layout_node);
+
+        this._fields = fields;
     }
 
 }

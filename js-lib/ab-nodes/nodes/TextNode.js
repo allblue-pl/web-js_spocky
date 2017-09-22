@@ -9,6 +9,14 @@ const Node = require('../Node');
 class TextNode extends Node
 {
 
+    get text() {
+        return this._htmlElement.nodeValue;
+    }
+    set text(value) {
+        this._htmlElement.nodeValue = value;
+    }
+
+
     constructor(text)
     { super();
         abTypes.prop(this, TextNode.PCopyable, this, arguments);

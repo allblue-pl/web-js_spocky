@@ -11,15 +11,15 @@ class LayoutNode extends abNodes.Node
     { super();
         abTypes.prop(this, LayoutNode.PChildren, this);
 
-        this._idNodes = {};
+        // this._idNodes = {};
     }
 
-    setIds(id_nodes)
-    {
-        abTypes.argsE(arguments, 'object');
-
-        this._idNodes = id_nodes;
-    }
+    // setIds(id_nodes)
+    // {
+    //     abTypes.argsE(arguments, 'object');
+    //
+    //     this._idNodes = id_nodes;
+    // }
 
 
     /* Node */

@@ -15,25 +15,17 @@ class RepeatNode extends Node
     { super();
         abTypes.prop(this, RepeatNode.PChildren, this);
 
-        this._instances = [];
+        this._instances = new Map();
     }
 
-    pop()
+    add(key)
     {
-        if (this._instances.length <= 0)
-            throw new Error('Cannot `pop` on empty `RepeatNode`.');
+        if (this._instances.has(key))
+            throw new Error(`Instance with ket \`${key}\` already exists.`);
 
-        let last_instance = this._instances.pop();
-
-        if (this.active)
-            last_instance.deactivate();
-    }
-
-    push()
-    {
         let instance = new RepeatNode.InstanceNode(this);
 
-        this._instances.push(instance);
+        this._instances.set(key, instance);
         for (let i = 0; i < this.children.length; i++) {
             let new_child_node = this.children.get(i).copyable.copy(true);
 
@@ -42,6 +34,38 @@ class RepeatNode extends Node
 
         if (this.active)
             instance.activate();
+    }
+
+    delete(key)
+    {
+        if (!this._instances.has(key))
+            throw new Error(`Instance with key \`${key}\ does not exist.`);
+
+        let instance = this._instances.get(key);
+
+        if (this.active)
+            instance.deactivate();
+    }
+
+    pop()
+    {
+        if (this._instances.size <= 0)
+            throw new Error('Cannot `pop` on empty `RepeatNode`.');
+
+        let key = Array.from(this._instances.keys)[this._instances.size - 1];
+        let last_instance = this._instances.get(key);
+
+        if (this.active)
+            last_instance.deactivate();
+    }
+
+    push()
+    {
+        let index = 0;
+        while(this._instances.has(index))
+            index++;
+
+        this.set(index);
     }
 
 
@@ -78,97 +102,34 @@ class RepeatNode extends Node
 module.exports = RepeatNode;
 
 
-RepeatNode.PChildren = class extends Node.PChildren {
+Object.defineProperties(RepeatNode, {
 
-    __onAddChild(child_node, next_node)
-    {
-        abTypes.implements(child_node, Node.PCopyable);
+    PChildren: { value:
+    class extends Node.PChildren {
 
-        if (next_node === null)
-            child_node._nextNode = this._nextNode;
+        __onAddChild(child_node, next_node)
+        {
+            abTypes.implements(child_node, Node.PCopyable);
 
-        if (this.show)
-            child_node.activate();
-    }
+            if (next_node === null)
+                child_node._nextNode = this._nextNode;
 
-    __getNext(child_node)
-    {
-        let next_node = this.findNext(child_node);
-        if (next_node !== null)
-            return next_node;
+            if (this.show)
+                child_node.activate();
+        }
 
-        return this.nextNode;
-    }
+        __getNext(child_node)
+        {
+            let next_node = this.findNext(child_node);
+            if (next_node !== null)
+                return next_node;
 
-};
+            return this.nextNode;
+        }
 
+    }},
 
-RepeatNode.InstanceNode =  class extends Node
-{
-
-    constructor(repeat_node)
-    { super();
-        abTypes.argsE(arguments, RepeatNode);
-        abTypes.prop(this, RepeatNode.InstanceNode.PChildren, this);
-
-        this._repeatNode = repeat_node;
-    }
+});
 
 
-    /* Node */
-    __onNodeActivate()
-    {
-        for (let i = 0; i < this.children.length; i++)
-            this.children.get(i).activate();
-    }
-
-    __onNodeDeactivate()
-    {
-        for (let i = 0; i < this.children.length; i++)
-            this.children.get(i).deactivate();
-    }
-
-    __getNodeHtmlElement()
-    {
-        return this._repeatNode.htmlElement;
-    }
-
-    __getNodeFirstHtmlElement()
-    {
-        return this.children.length === 0 ? null : this.children.get(0).firstHtmlElement;
-    }
-    /* / Node */
-
-};
-
-
-RepeatNode.InstanceNode.PChildren = class extends Node.PChildren
-{
-
-    constructor(node)
-    { super(node);
-
-    }
-
-    __onAddChild(child_node, next_node)
-    {
-        if (this.__node.active)
-            child_node.activate();
-    }
-
-    __getNext(child_node)
-    {
-        let next_node = this.getNext(child_node);
-        if (next_node !== null)
-            return next_node;
-
-        let instance_index = this.__node._repeatNode._instances.indexOf(this.__node);
-        abTypes.assert(instance_index !== -1, 'Instance not in repeat node.');
-
-        if (instance_index === this.__node._repeatNode._instances.length - 1)
-            return this.__node._repeatNode.nextNode;
-
-        return this.__node._repeatNode._instances[instance_index + 1].firstHtmlElement;
-    }
-
-};
+require('./RepeatNode.InstanceNode');

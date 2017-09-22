@@ -5,23 +5,20 @@ const abTypes = require('ab-types');
 const Node = require('../Node');
 
 
-class ShowNode extends Node
+class HideNode extends Node
 {
 
-    get show()
-    {
-        return this._show;
+    get hide() {
+        return this._hide;
     }
-
-    set show(show_value)
-    {
+    set hide(hide_value) {
         abTypes.argsE(arguments, 'boolean');
 
-        if (show_value === this._show)
+        if (hide_value === this._hide)
             return;
-        this._show = show_value;
+        this._hide = hide_value;
 
-        if (show_value) {
+        if (hide_value) {
             if (this.active) {
                 for (let i = 0; i < this.children.length; i++)
                     this.children.get(i).activate();
@@ -35,9 +32,9 @@ class ShowNode extends Node
 
     constructor()
     { super();
-        abTypes.prop(this, ShowNode.PChildren, this);
+        abTypes.prop(this, HideNode.PChildren, this);
 
-        this._show = false;
+        this._hide = false;
     }
 
 
@@ -77,13 +74,13 @@ class ShowNode extends Node
     /* / Node */
 
 }
-module.exports = ShowNode;
+module.exports = HideNode;
 
 
-Object.defineProperties(ShowNode, {
+Object.defineProperties(HideNode, {
 
     PChildren: { value:
-    class ShowNode_PChildren extends Node.PChildren
+    class HideNode_PChildren extends Node.PChildren
     {
 
         __onAddChild(child_node, next_node)

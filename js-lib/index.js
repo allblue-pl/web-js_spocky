@@ -99,7 +99,7 @@ const spocky = new class spocky
 
     package(package_path, package_init_fn, package_prototype = null)
     {
-        abTypes.argsE(arguments, 'string', 'function', 'function');
+        abTypes.argsE(arguments, 'string', 'function', [ 'function', abTypes.Default ]);
 
         if (this._initialized)
             throw new Error('Cannot define package after initialization.');

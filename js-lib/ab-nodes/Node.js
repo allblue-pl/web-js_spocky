@@ -12,12 +12,23 @@ class Node
 
     get firstHtmlElement() {
         let first_html_element = this.__getNodeFirstHtmlElement();
+        if (!abTypes.var(first_html_element, HTMLElement)) {
+            throw new Error(`\`__getNodeFirstHtmlElement\` in \`${this.constructor.name}\`` +
+                    `does not return \`HTMLElement\`.`);
+        }
+
         return first_html_element !== null ?
                 first_html_element : this.nextHtmlElement;
     }
 
     get htmlElement() {
-        return this.__getNodeHtmlElement();
+        let html_element = this.__getNodeHtmlElement();
+        if (!abTypes.var(html_element, HTMLElement)) {
+            throw new Error(`\`__getNodeHtmlElement\` in \`${this.constructor.name}\`` +
+                    `does not return \`HTMLElement\`.`);
+        }
+
+        return html_element;
     }
 
     get nextHtmlElement() {
@@ -36,9 +47,7 @@ class Node
     constructor()
     {
         this._active = null;
-
         this._listener = null;
-
         this._parentNode = null;
     }
 
@@ -94,7 +103,7 @@ Object.defineProperties(Node, {
 
         add(child_node, next_node = null)
         {
-            abTypes.argsE(arguments, Node, Node);
+            abTypes.argsE(arguments, Node, [ Node, abTypes.Default ]);
 
             let insert_index = next_node === null ?
                     this._children.length : this._children.indexOf(next_node);

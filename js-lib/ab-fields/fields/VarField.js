@@ -1,14 +1,31 @@
 'use strict';
 
+const Field = require('../Field');
+
 
 class VarField extends Field
 {
 
-    __getField(field_path)
+    constructor()
+    { super();
+        this._value = undefined;
+    }
+
+
+    __value_OnGet()
     {
-        let value_type = typeof this.value;
-        throw new Error(`Wrong field path. \`${this._fullPath}\` is a ` +
-                `\`${value_type}\`.`);
+        return this._value;
+    }
+
+    __value_OnSet(value)
+    {
+        this._value = value;
+
+        if ('onChange' in this.__definitionInfo)
+            this.__definitionInfo.onChange(value);
+
+        return value;
     }
 
 }
+module.exports = VarField;
