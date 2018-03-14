@@ -10,26 +10,26 @@ class ElementNode extends abNodes.Node
     constructor(html_element_type)
     { super();
         abTypes.argsE(arguments, 'string');
-        abTypes.prop(this, ElementNode.PChildren, this);
+        abTypes.prop(this, ElementNode.PChildren);
     }
 
 
     /* Node */
-    __onNodeActivate()
+    __onActivate()
     {
         let nodes = Array.from(this._nodes.values());
         for (let i = 0; i < nodes.length; i++)
             nodes[i].activate();
     }
 
-    __onNodeDeactivate()
+    __onDeactivate()
     {
         let nodes = Array.from(this._nodes.values());
         for (let i = nodes.length - 1; i >= 0; i--)
             nodes[i].deactivate();
     }
 
-    __getNodeHtmlElement()
+    __getHtmlElement()
     {
         abTypes.assert(this._nodes.size > 0, `\`ElementNode\` is empty.`);
 
@@ -38,7 +38,7 @@ class ElementNode extends abNodes.Node
         return nodes[this._nodes.size - 1].htmlElement;
     }
 
-    __getNodeFirstHtmlElement()
+    __getFirstHtmlElement()
     {
         abTypes.assert(this._nodes.size > 0, `\`ElementNode\` is empty.`);
 
@@ -61,11 +61,6 @@ Object.defineProperties(ElementNode, {
         __onAddChild(child_node, next_node)
         {
             child_node.activate();
-        }
-
-        __getNext(child_node)
-        {
-            return this.getNext(child_node);
         }
 
     }},

@@ -9,7 +9,7 @@ class LayoutNode extends abNodes.Node
 
     constructor()
     { super();
-        abTypes.prop(this, LayoutNode.PChildren, this);
+        abTypes.prop(this, LayoutNode.PChildren);
 
         // this._idNodes = {};
     }
@@ -23,29 +23,31 @@ class LayoutNode extends abNodes.Node
 
 
     /* Node */
-    __onNodeActivate()
+    __onActivate()
     {
-        for (let i = 0; i < this.children.length; i++)
-            this.children.get(i).activate();
+        for (let i = 0; i < this.pChildren.length; i++) {
+            // console.log('LayoutNode', this.pChildren.get(i));
+            this.pChildren.get(i).activate();
+        }
     }
 
-    __onNodeDeactivate()
+    __onDeactivate()
     {
-        for (let i = this.children.length - 1; i >= 0; i--)
-            this.children.get(i).deactivate();
+        for (let i = this.pChildren.length - 1; i >= 0; i--)
+            this.pChildren.get(i).deactivate();
     }
 
-    __getNodeHtmlElement()
+    __getHtmlElement()
     {
         abTypes.assert(this.parentNode !== null, 'Parent node not set.');
 
         return this.parentNode.htmlElement;
     }
 
-    __getNodeFirstHtmlElement()
+    __getFirstHtmlElement()
     {
-        return this.children.length === 0 ?
-                null : this.children.get(0).firstHtmlElement;
+        return this.pChildren.length === 0 ?
+                null : this.pChildren.get(0).firstHtmlElement;
     }
     /* / Node */
 
@@ -70,11 +72,11 @@ Object.defineProperties(LayoutNode, {
 
         __getNext(child_node)
         {
-            let next_node = this.getNext(child_node);
+            let next_node = this.findNext(child_node);
             if (next_node !== null)
                 return next_node;
 
-            return this.__node.nextNode;
+            return this.__main.nextNode;
         }
 
     }}

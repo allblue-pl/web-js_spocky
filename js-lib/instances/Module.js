@@ -2,7 +2,7 @@
 
 const abTypes = require('ab-types');
 
-const Viewable = require('../Viewable');
+const Viewable = require('../core/Viewable');
 const Layout = require('./Layout');
 
 
@@ -39,7 +39,7 @@ class Module
         else
             throw new Error(`$view must be a \`Module\`, \`Layout\` or \`Array\`.`);
 
-        
+
     }
 
 }

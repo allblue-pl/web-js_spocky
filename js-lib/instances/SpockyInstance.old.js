@@ -99,7 +99,7 @@ class SpockyInstance
             let root_node = new abNodes.RootNode(root_module_info.htmlElement);
             let root_module_nodes = root_module._$viewable.getNodes();
             for (let i = 0; i < root_module_nodes.length; i++)
-                root_node.children.add(root_module_nodes[i]);
+                root_node.pChildren.add(root_module_nodes[i]);
             root_node.activate();
         }
 

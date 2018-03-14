@@ -2,6 +2,8 @@
 
 const RepeatNode = require('./RepeatNode');
 
+const abTypes = require('ab-types');
+
 const Node = require('../Node');
 
 
@@ -9,36 +11,63 @@ Object.defineProperty(RepeatNode, 'InstanceNode', { value:
 class RepeatNode_InstanceNode extends Node
 {
 
-    constructor(repeat_node)
+    get key() {
+        return this._key;
+    }
+
+    constructor(repeat_node, key)
     { super();
         abTypes.argsE(arguments, RepeatNode);
-        abTypes.prop(this, RepeatNode.InstanceNode.PChildren, this);
+        abTypes.prop(this, RepeatNode.InstanceNode.PChildren);
+        // abTypes.prop(this, RepeatNode.InstanceNode.PCopyable, this);
+
+        this._key = key;
 
         this._repeatNode = repeat_node;
+        this._nodeCopies = [];
+    }
+
+    addNodeCopy(node_copy)
+    {
+        this._nodeCopies.push(node_copy);
     }
 
 
     /* Node */
-    __onNodeActivate()
+    __onActivate()
     {
-        for (let i = 0; i < this.children.length; i++)
-            this.children.get(i).activate();
+        for (let i = 0; i < this.pChildren.length; i++)
+            this.pChildren.get(i).activate();
     }
 
-    __onNodeDeactivate()
+    __onDeactivate()
     {
-        for (let i = 0; i < this.children.length; i++)
-            this.children.get(i).deactivate();
+        for (let i = 0; i < this.pChildren.length; i++)
+            this.pChildren.get(i).deactivate();
     }
 
-    __getNodeHtmlElement()
+    __getHtmlElement()
     {
         return this._repeatNode.htmlElement;
     }
 
-    __getNodeFirstHtmlElement()
+    __getFirstHtmlElement()
     {
-        return this.children.length === 0 ? null : this.children.get(0).firstHtmlElement;
+        if (this.pChildren.length > 0)
+            return this.pChildren.get(0).firstHtmlElement;
+
+        let checking = false;
+        for (let instance of this._repeatNode._instances) {
+            if (instance.key === this.key)
+                checking = true;
+            if (!checking)
+                continue;
+
+            if (instance.pChildren.length > 0)
+                return this.pChildren.get(0).firstHtmlElement;
+        }
+
+        return null;
     }
     /* / Node */
 
@@ -59,25 +88,40 @@ Object.defineProperties(RepeatNode.InstanceNode, {
 
         __onAddChild(child_node, next_node)
         {
-            if (this.__node.active)
+            if (this.__main.active)
                 child_node.activate();
         }
 
         __getNext(child_node)
         {
-            let next_node = this.getNext(child_node);
+            let next_node = this.findNext(child_node);
             if (next_node !== null)
                 return next_node;
 
-            let instance_index = this.__node._repeatNode._instances.indexOf(this.__node);
+            let instance_index = this.__main._repeatNode._instances.indexOf(
+                    this.__main);
             abTypes.assert(instance_index !== -1, 'Instance not in repeat node.');
 
-            if (instance_index === this.__node._repeatNode._instances.length - 1)
-                return this.__node._repeatNode.nextNode;
+            if (instance_index === this.__main._repeatNode._instances.size - 1)
+                return this.__main._repeatNode.nextNode;
 
-            return this.__node._repeatNode._instances[instance_index + 1].firstHtmlElement;
+            return this.__main._repeatNode._instances.getAt(instance_index + 1)
+                    .firstHtmlElement;
         }
 
-    }}
+    }},
+
+
+    // PCopyable: { value:
+    // class RepeatNode_InstanceNode_PCopyable extends Node.PCopyable
+    // {
+    //
+    //     __createCopy(instance_nodes)
+    //     {
+    //         throw new Error('To do.');
+    //         // return new RepeatNode.InstanceNode(this.__args[0]);
+    //     }
+    //
+    // }},
 
 });

@@ -28,37 +28,23 @@ class Parser
         let layout_node = new LayoutNode();
         let id_nodes = {};
 
-        let elements_stack = [];
-        let parent_nodes_stack = [ null ];
-        let parent_node_contents_stack = [ layout_content ];
+        let parents_stack = [{
+            node: null,
+            nodeContent: layout_content,
+            elements: [],
+        }];
 
-        while (parent_nodes_stack.length > 0) {
-            let parent_node = parent_nodes_stack[0];
-            let parent_node_content = parent_node_contents_stack[0];
+        while (parents_stack.length > 0) {
+            let parent = parents_stack.pop();
 
-            for (let i = 0; i < parent_node_content.length; i++) {
-                let node_info = this._parseNodeInfo(
-                        parent_node_content[i]);
+            for (let i = 0; i < parent.nodeContent.length; i++) {
+                let node_info = this._parseNodeInfo(parent.nodeContent[i]);
 
-                let top_node = null;
-                let bottom_node = null;
-                let info = null;
-
-                let node = this.__createNode(node_info, elements_stack);
-                if (abTypes.var(node, abNodes.Node)) {
-                    top_node = node;
-                    bottom_node = node;
-                } else if (abTypes.var(node, Parser.Element)) {
-                    if (node.length !== 2) {
-                        throw new Error(`\`__createNode\` must return \`Array\`` +
-                                ` with exactly 2 elements.`);
-                    }
-
-                    [ top_node, bottom_node, info ] = node;
-                    // top_node = node[0];
-                    // bottom_node = node[1];
-                } else
-                    throw new Error(`\`__createNode\` must return \`Node\` or \`Array\`.`);
+                let element = this.__createElement(node_info, parent.elements);
+                if (!abTypes.var(element, Parser.Element)) {
+                    throw new Error(`\`__createNode\` must return` +
+                            ` \`abLayout.Parser.Element\` object.`);
+                }
 
                 // if ('_id' in node_info.attribs) {
                 //     if (node_info.attribs._id in id_nodes) {
@@ -68,22 +54,23 @@ class Parser
                 //     // id_nodes[node_info.attribs._id] = node;
                 // }
 
-                if (parent_node === null)
-                    layout_node.children.add(top_node);
+                if (parent.node === null)
+                    layout_node.pChildren.add(element.topNode);
                 else
-                    parent_node.children.add(top_node);
+                    parent.node.pChildren.add(element.topNode);
 
-                if (abTypes.implements(bottom_node, abNodes.Node.PChildren)) {
-                    parent_nodes_stack.push(bottom_node);
-                    parent_node_contents_stack.push(node_info.content);
-
-                    elements_stack.push(new Parser.Element(top_node,
-                            bottom_node, info));
+                if (abTypes.implements(element.bottomNode, abNodes.Node.PChildren)) {
+                    parents_stack.push({
+                        node: element.bottomNode,
+                        nodeContent: node_info.content,
+                        elements: parent.elements.concat([ element ]),
+                    });
                 }
             }
 
-            parent_nodes_stack.splice(0, 1);
-            parent_node_contents_stack.splice(0, 1);
+            // parent_nodes_stack.pop();
+            // parent.nodeContents_stack.pop();
+            // return;
         }
 
         // layout_node.setIds(id_nodes);
@@ -142,7 +129,7 @@ class Parser
             };
         } else {
             return {
-                type: '_text',
+                type: '_content',
                 attribs: {},
                 content: node_info,
             };
@@ -187,15 +174,15 @@ class Parser
         return attribs;
     }
 
-    _validateNodeContent(node_content)
-    {
-        if (node_content !== null) {
-            if (!(node_content instanceof Array)) {
-                console.error('Error info:', node_type, node_content);
-                throw new Error('Node content must be `null` or `Array`.');
-            }
-        }
-    }
+    // _validateNodeContent(node_type, node_content)
+    // {
+    //     if (node_content !== null) {
+    //         if (!(node_content instanceof Array)) {
+    //             console.error('Error info:', node_type, node_content);
+    //             throw new Error('Node content must be `null` or `Array`.');
+    //         }
+    //     }
+    // }
 
 
     __onParse()
@@ -204,7 +191,7 @@ class Parser
     }
 
 
-    __createNode(node_info) { abTypes.virtual(this); }
+    __createElement(node_info) { abTypes.virtual(this); }
 
 }
 module.exports = Parser;

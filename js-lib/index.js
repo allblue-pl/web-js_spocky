@@ -28,7 +28,7 @@ const spocky = new class spocky
     }
 
     get Fields() {
-        return abFields.ObjectField;
+        return abFields.RootField;
     }
 
 

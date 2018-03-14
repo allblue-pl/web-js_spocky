@@ -8,7 +8,7 @@ class MultiView
 
     constructor()
     {
-        abTypes.prop(this, MultiView.Viewable, this)
+        abTypes.prop(this, MultiView.Viewable)
         Object.defineProperties(this, {
             _views: { value: [] },
         });

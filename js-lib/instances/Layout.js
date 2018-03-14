@@ -4,7 +4,7 @@ const abNodes = require('../ab-nodes');
 const abTypes = require('ab-types');
 const abLayouts = require('../ab-layouts');
 
-const Viewable = require('../Viewable');
+const Viewable = require('../core/Viewable');
 const LayoutParser = require('../core/LayoutParser');
 
 
@@ -15,8 +15,10 @@ class Layout
     {
         let layout_node = Layout.Parser.parse(layout_content);
         let fields = Layout.Parser.getFields();
+        let elems = Layout.Parser.getElems();
+        let nodes = Layout.Parser.getNodes();
 
-        return new Layout(layout_node, fields);
+        return new Layout(layout_node, fields, elems, nodes);
     }
 
 
@@ -24,12 +26,20 @@ class Layout
         return this._fields;
     }
 
-    constructor(layout_node, fields)
+    get elems() {
+        return this._elems;
+    }
+
+    constructor(layout_node, fields, elems, nodes)
     {
         abTypes.argsE(arguments, abLayouts.LayoutNode);
         abTypes.prop(this, Layout.Viewable, layout_node);
 
-        this._fields = fields;
+        Object.defineProperties(this, {
+            _fields: { value: fields, },
+            _elems: { value: elems, },
+            _nodes: { value: nodes, },
+        });
     }
 
 }

@@ -19,7 +19,7 @@ class TextNode extends Node
 
     constructor(text)
     { super();
-        abTypes.prop(this, TextNode.PCopyable, this, arguments);
+        abTypes.prop(this, TextNode.PCopyable, arguments);
 
         this._text = text;
         this._htmlElement = document.createTextNode(text);
@@ -27,7 +27,7 @@ class TextNode extends Node
 
 
     /* Node */
-    __onNodeActivate()
+    __onActivate()
     {
         abTypes.assert(this.parentNode !== null, 'Parent node not set.');
 
@@ -35,17 +35,17 @@ class TextNode extends Node
                 this.nextHtmlElement);
     }
 
-    __onNodeDeactivate()
+    __onDeactivate()
     {
         HtmlElement.RemoveChild(this.parentNode.htmlElement, this._htmlElement);
     }
 
-    __getNodeHtmlElement()
+    __getHtmlElement()
     {
         return this._htmlElement;
     }
 
-    __getNodeFirstHtmlElement()
+    __getFirstHtmlElement()
     {
         if (!this.active)
             return null;
@@ -64,7 +64,12 @@ Object.defineProperties(TextNode, {
     class TextNode_PCopyable extends Node.PCopyable
     {
 
-        copy(deep_copy) {
+        constructor(node, args)
+        { super(node, args);
+
+        }
+
+        __createCopy() {
             return new TextNode(this.__args[0]);
         }
 

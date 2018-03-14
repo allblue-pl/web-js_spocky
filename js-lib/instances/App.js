@@ -148,7 +148,7 @@ class App
             let root_module_nodes = root_module._$viewable.getNodes();
 
             for (let i = 0; i < root_module_nodes.length; i++)
-                root_node.children.add(root_module_nodes[i]);
+                root_node.pChildren.add(root_module_nodes[i]);
             root_node.activate();
         }
 

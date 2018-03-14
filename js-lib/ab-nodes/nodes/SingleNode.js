@@ -12,15 +12,15 @@ class SingleNode extends Node
     constructor(html_element_type)
     { super();
         abTypes.argsE(arguments, 'string');
-        abTypes.prop(this, SingleNode.PChildren, this);
-        abTypes.prop(this, SingleNode.PCopyable, this, arguments);
+        abTypes.prop(this, SingleNode.PChildren);
+        abTypes.prop(this, SingleNode.PCopyable, arguments);
 
         this._htmlElement = document.createElement(html_element_type);
     }
 
 
     /* Node */
-    __onNodeActivate()
+    __onActivate()
     {
         abTypes.assert(this.parentNode !== null, 'Parent node not set.');
 
@@ -28,17 +28,17 @@ class SingleNode extends Node
                 this.nextHtmlElement);
     }
 
-    __onNodeDeactivate()
+    __onDeactivate()
     {
         HtmlElement.RemoveChild(this.parentNode.htmlElement, this._htmlElement);
     }
 
-    __getNodeHtmlElement()
+    __getHtmlElement()
     {
         return this._htmlElement;
     }
 
-    __getNodeFirstHtmlElement()
+    __getFirstHtmlElement()
     {
         if (!this.active)
             return null;
@@ -62,11 +62,6 @@ Object.defineProperties(SingleNode, {
             child_node.activate();
         }
 
-        __getNext(child_node)
-        {
-            return this.getNext(child_node);
-        }
-
     }},
 
 
@@ -74,11 +69,8 @@ Object.defineProperties(SingleNode, {
     class SingleNode_PCopyable extends Node.PCopyable
     {
 
-        copy(deep_copy)
+        __createCopy(deep_copy, node_instances)
         {
-            if (deep_copy && abTypes.implements(this.__node, Node.PChildren))
-                return this.__node.children.copy();
-
             return new SingleNode(this.__args[0]);
         }
 

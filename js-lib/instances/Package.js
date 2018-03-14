@@ -2,7 +2,7 @@
 
 const abTypes = require('ab-types');
 
-const Viewable = require('../Viewable');
+const Viewable = require('../core/Viewable');
 
 const Module = require('./Module');
 

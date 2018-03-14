@@ -7,46 +7,64 @@ class Field
 {
 
     get $value() {
-        return this.__value_Get();
+        return this._rootField._$value_Get(this._fullPath);
     }
     set $value(value) {
-        return this.__value_Set(value);
+        this._rootField._$value_Set(this._fullPath, value);
+    }
+
+    get _$rootField() {
+        return this._rootField;
+    }
+
+    get _$fullPath() {
+        return this._fullPath;
+    }
+
+    get _$rootPath() {
+        return this._fullPath.substring(2);
+    }
+
+    get _$definitionInfos() {
+        return this._definitionInfos;
+    }
+
+    get _$name() {
+        return this._fullPath.substring(this._fullPath.lastIndexOf('.') + 1);
     }
 
 
-    constructor(root_field, definition_info = {})
+    constructor()
     {
-        abTypes.argsE(arguments, 'string', [ abTypes.RawObject, abTypes.Default ]);
+        Object.defineProperties(this, {
+            _rootField: { value: null, writable: true, },
+            _fullPath: { value: null, writable: true,},
+            _definitionInfos: { value: null, writable: true,},
 
-        this._rootField = root_field;
-        this._definitionInfo = definition_info;
+            _listeners_OnChange: { value: [], },
+        });
     }
 
     $onChange(on_change_listener)
     {
-        this.__listeners_OnChange.push(on_change_listener);
+        this._listeners_OnChange.push(on_change_listener);
     }
 
-
-    __getFieldNamesArray(field_path)
+    __init(root_field, field_full_path, definition_infos)
     {
-        let field_names_array = field_path.split('.');
-
-        return field_names_array;
+        this._rootField = root_field;
+        this._fullPath = field_full_path;
+        this._definitionInfos = definition_infos;
     }
 
-    __value_Get()
+    __onChange(value)
     {
-        return this.__value_OnGet();
-    }
+        for (let definition_info of this._$definitionInfos) {
+            if ('onChange' in definition_info)
+                definition_info.onChange(value, this._$name, this._$rootPath);
+        }
 
-    __value_Set(value)
-    {
-        value = this.__value_OnSet(value);
-
-        for (let on_core_change_listener of this.__listeners_OnCoreChange)
-            on_core_change_listener(value);
-        for (let on_change_listener of this.__listeners_OnChange)
+        for (let on_change_listener of this._listeners_OnChange)
             on_change_listener(value);
     }
 

@@ -13,23 +13,27 @@ class RepeatNode extends Node
 
     constructor()
     { super();
-        abTypes.prop(this, RepeatNode.PChildren, this);
+        abTypes.prop(this, RepeatNode.PChildren);
+        abTypes.prop(this, RepeatNode.PCopyable, arguments);
 
-        this._instances = new Map();
+        this._instances = new abTypes.List();
     }
 
     add(key)
     {
         if (this._instances.has(key))
-            throw new Error(`Instance with ket \`${key}\` already exists.`);
+            throw new Error(`Instance with key \`${key}\` already exists.`);
 
-        let instance = new RepeatNode.InstanceNode(this);
+        let instance = new RepeatNode.InstanceNode(this, key);
 
         this._instances.set(key, instance);
-        for (let i = 0; i < this.children.length; i++) {
-            let new_child_node = this.children.get(i).copyable.copy(true);
+        let original_node = this.pCopyable.getOriginalNode();
 
-            instance.children.add(new_child_node);
+        let instance_keys = this.pCopyable._instanceKeys.concat([ key ]);
+        for (let i = 0; i < original_node.pChildren.length; i++) {
+            let new_child_node = original_node.pChildren.get(i).pCopyable
+                    .createCopy(instance_keys);
+            instance.pChildren.add(new_child_node);
         }
 
         if (this.active)
@@ -42,9 +46,40 @@ class RepeatNode extends Node
             throw new Error(`Instance with key \`${key}\ does not exist.`);
 
         let instance = this._instances.get(key);
+        this._instances.delete(key);
+
+        let original_node = this.pCopyable.getOriginalNode();
+        let instance_keys = this.pCopyable._instanceKeys.concat([ key ]);
+        for (let i = 0; i < original_node.pChildren.length; i++)
+            original_node.pChildren.get(i).pCopyable.deleteCopies(instance_keys);
+        //
+        // for (let i = 0; i < original_node.pChildren.length; i++) {
+        //
+        //     let new_child_node = original_node.pChildren.get(i).pCopyable.createCopy(
+        //             true, this.pCopyable._instanceKeys.concat([ key ]));
+        //     instance.pChildren.add(new_child_node);
+        // }
 
         if (this.active)
             instance.deactivate();
+    }
+
+    getInstanceNodeCopies(source_node, key)
+    {
+        abTypes.argsE(arguments, Node, [ 'string', 'number' ]);
+
+        if (!this._instances.has(key))
+            return null;
+
+        let instance = this._instances.get(key);
+
+        let node_copies = [];
+        for (let node_copy of instance._nodeCopies) {
+            if (node_copy.pCopyable.sourceNode === source_node)
+                node_copies.push(node_copy);
+        }
+
+        return node_copies;
     }
 
     pop()
@@ -70,31 +105,31 @@ class RepeatNode extends Node
 
 
     /* Node */
-    __onNodeActivate()
+    __onActivate()
     {
         abTypes.assert(this.parentNode !== null, 'Parent node not set.');
 
-        for (let i = 0; i < this._instances.length; i++)
-            this._instances[i].activate();
+        for (let i = 0; i < this._instances.size; i++)
+            this._instances.getAt(i).activate();
     }
 
-    __onNodeDeactivate()
+    __onDeactivate()
     {
-        for (let i = 0; i < this._instances.length; i++)
-            this._instances[i].deactivate();
+        for (let i = this._instances.size - 1; i > 0; i--)
+            this._instances.getAt(i).deactivate();
     }
 
-    __getNodeHtmlElement()
+    __getHtmlElement()
     {
         abTypes.assert(this.parentNode !== null, 'Parent node not set.');
 
         return this.parentNode.htmlElement;
     }
 
-    __getNodeFirstHtmlElement()
+    __getFirstHtmlElement()
     {
-        return this._instances.length === 0 ?
-                null : this._instances[0].firstHtmlElement;
+        return this._instances.size === 0 ?
+                null : this._instances.getAt(0).firstHtmlElement;
     }
     /* / Node */
 
@@ -109,13 +144,8 @@ Object.defineProperties(RepeatNode, {
 
         __onAddChild(child_node, next_node)
         {
-            abTypes.implements(child_node, Node.PCopyable);
-
-            if (next_node === null)
-                child_node._nextNode = this._nextNode;
-
-            if (this.show)
-                child_node.activate();
+            abTypes.implementsE(child_node, Node.PCopyable);
+            // abTypes.argsE(arguments, abTypes.Prop(Node.PCopyable), Node);
         }
 
         __getNext(child_node)
@@ -125,6 +155,18 @@ Object.defineProperties(RepeatNode, {
                 return next_node;
 
             return this.nextNode;
+        }
+
+    }},
+
+
+    PCopyable: { value:
+    class RepeatNode_PCopyable extends Node.PCopyable
+    {
+
+        __createCopy(node_instances)
+        {
+            return new RepeatNode();
         }
 
     }},

@@ -11,109 +11,142 @@ const VarField = require('./VarField');
 class ObjectField extends Field
 {
 
-    constructor(root_field)
-    { super(root_field);
+    get $length() {
+        return this._fieldFullPaths.size;
+    }
+
+
+    constructor()
+    { super();
+        // Object.defineProperty(this, Symbol.iterator, {
+        //     value: () => {
+        //         console.log(arguments, 'Hm?');
+        //         return new ObjectField.Iterator(this);
+        //     },
+        // });
         Object.defineProperties(this, {
-            _fields: { value: new Map(), },
-            _values: { value: {}, },
+            _fieldFullPaths: { value: new abTypes.List(), },
         });
+    }
+
+    [Symbol.iterator]() {
+        return new ObjectField.Iterator(this);
+    }
+
+    $delete(field_path)
+    {
+        this._$rootField._$field_Delete(`${this._$fullPath}.${field_path}`);
+    }
+
+    $exists(field_path)
+    {
+        return this._$rootField._$field_Exists(`${this._$fullPath}.${field_path}`);
     }
 
     $get(field_path)
     {
-        abTypes.argsE(arguments, 'string');
+        field_path = String(field_path);
 
-        let field = this.__field_Get(this._getFieldNamesArray(field_path), false);
+        return this._$rootField._$value_Get(`${this._$fullPath}.${field_path}`);
+    }
 
-        return field.value;
+    $pop()
+    {
+        let field_full_path = this._fieldFullPaths
+                .getAt(this._fieldFullPaths.size - 1);
+        this._$rootField._$field_Delete(field_full_path);
+    }
+
+    $push(value)
+    {
+        let key = this.$length;
+        while (this._fieldFullPaths.has(String(key)))
+            key++;
+
+        this.$set(key, value);
     }
 
     $set(field_path, field_value)
     {
-        abTypes.argsE(arguments, 'string', null, [ 'function', abTypes.Default ]);
+        abTypes.argsE(arguments, [ 'string', 'number' ], null);
 
-        let field = this.__field_Get(this.__getFieldNamesArray(field_path), true);
-        if (on_core_change_listener !== null)
-           field.__listeners_OnCoreChange.push(on_core_change_listener);
-        field.__value_Set(field_value);
+        this._$rootField._$value_Set(`${this._$fullPath}.${field_path}`, field_value);
 
-        return field;
+        return this._$rootField._$field_Get(`${this._$fullPath}.${field_path}`, false);
     }
 
-    $setField(field_path, field)
+    $values()
     {
-        let field_names_array = this.__getFieldNamesArray(field_path);
-
-        let parent_field = this.__field_Get(field_names_array, {});
 
     }
 
 
-    __field_Get(field_names_array, create)
-    {
-        let object_field = this;
-        for (let i = 0; i < field_names_array.length; i++) {
-            let field_name = field_names_array[i];
-            let final = i === field_names_array.length - 1;
+    __onSet(field_name, field_value)
+    { let self = this;
+        let field_full_path = `${this._$fullPath}.${field_name}`;
 
-            let field = null;
-            if (!this._fields.has(field_name)) {
-                if (create) {
-                    if (final) {
-                        field = new VarField();
-                        object_field.__field_Set(field_name, field);
-                    } else {
-                        field = new ObjectField();
-                        object_field.__field_Set(field_name, field);
-                    }
-                } else
-                    return null;
-            } else
-                field = this._fields.get(field_name);
-
-            if (final)
-                return field;
-
-            if (!(field instanceof ObjectField))
-                return null;
-
-            object_field = field;
-        }
-    }
-
-    __field_Set(field_name, field)
-    {
-        this._fields.set(field_name, field);
-        field._fullPath = `${this._fullPath}.${field_name}`;
+        this._fieldFullPaths.set(field_name, field_full_path);
 
         Object.defineProperty(this, field_name, {
             get: () => {
-                return field.$value;
+                return this._$rootField._$value_Get(field_full_path);
             },
             set: (value) => {
-                field.$value = value;
+                return this._$rootField._$value_Set(field_full_path, value);
             },
             enumerable: true,
+            configurable: true,
         });
-    }
 
-    __value_Get()
-    {
-        return this;
-    }
-
-    __value_OnSet(value)
-    {
-        if (value !== null) {
-            if (Object.getPrototypeOf(value) !== Object.prototype ||
-                    !(value instanceof Map)) {
-                throw new FieldError(`\`ObjectField\` value must be \`null\`` +
-                        ` or an \`object\`.`)
-            }
+        for (let definition_info of this._$definitionInfos) {
+            if ('onSet' in definition_info)
+                definition_info.onSet(field_name, field_value, this._$rootPath);
         }
+    }
 
+    __onDelete(field_name)
+    {
+        let field_full_path = `${this._$fullPath}.${field_name}`;
 
+        delete this[field_name];
+
+        this._fieldFullPaths.delete(field_name);
+
+        for (let definition_info of this._$definitionInfos) {
+            if ('onDelete' in definition_info)
+                definition_info.onDelete(field_name, this._$rootPath);
+        }
     }
 
 }
 module.exports = ObjectField;
+
+
+Object.defineProperties(ObjectField, {
+
+    Iterator: { value:
+    class {
+
+        constructor(object_field)
+        {
+            this._rootField = object_field._$rootField;
+            this._iterator = object_field._fieldFullPaths[Symbol.iterator]();
+        }
+
+        next()
+        {
+            let next_info = this._iterator.next();
+            if (next_info.done)
+                return { value: undefined, done: true, };
+
+            let [ field_name, field_full_path ] = next_info.value;
+
+            return {
+                value: [ field_name, this._rootField._$value_Get(field_full_path) ],
+                done: false,
+            };
+        }
+
+    }},
+
+});
