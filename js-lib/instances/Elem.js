@@ -16,3 +16,4 @@ class Elem
 
 
 }
+module.exports = Elem;

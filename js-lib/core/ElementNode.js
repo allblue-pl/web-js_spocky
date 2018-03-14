@@ -1,7 +1,7 @@
 'use strict';
 
-const abNodes = require('../ab-nodes');
-const abTypes = require('ab-types');
+const abNodes = require('ab-nodes');
+const js0 = require('js0');
 
 
 class ElementNode extends abNodes.Node
@@ -9,8 +9,8 @@ class ElementNode extends abNodes.Node
 
     constructor(html_element_type)
     { super();
-        abTypes.argsE(arguments, 'string');
-        abTypes.prop(this, ElementNode.PChildren);
+        js0.args(arguments, 'string');
+        js0.prop(this, ElementNode.PChildren);
     }
 
 
@@ -31,7 +31,7 @@ class ElementNode extends abNodes.Node
 
     __getHtmlElement()
     {
-        abTypes.assert(this._nodes.size > 0, `\`ElementNode\` is empty.`);
+        js0.assert(this._nodes.size > 0, `\`ElementNode\` is empty.`);
 
         let nodes = Array.from(this._nodes.values());
 
@@ -40,7 +40,7 @@ class ElementNode extends abNodes.Node
 
     __getFirstHtmlElement()
     {
-        abTypes.assert(this._nodes.size > 0, `\`ElementNode\` is empty.`);
+        js0.assert(this._nodes.size > 0, `\`ElementNode\` is empty.`);
 
         let nodes = Array.from(this._nodes.values());
 
@@ -67,7 +67,7 @@ Object.defineProperties(ElementNode, {
 
 
     // Presets: { value:
-    // new abTypes.Presets({
+    // new js0.Presets({
     //     field: {
     //         required: false,
     //         type: 'boolean',

@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const ObjectField = require('./ObjectField');
 const VarField = require('./VarField');
@@ -33,7 +33,7 @@ class RootField extends ObjectField
 
     $define(full_field_path, definition_info)
     {
-        abTypes.argsE(arguments, 'string', abTypes.RawObject);
+        js0.args(arguments, 'string', js0.RawObject);
 
         let definition = new RootField.Definition(full_field_path,
                 definition_info);
@@ -52,7 +52,7 @@ class RootField extends ObjectField
         if (!this._$field_Exists(field_full_path))
             return;
 
-        if (abTypes.var(field, ObjectField))
+        if (js0.var(field, ObjectField))
             this._field_Delete_ObjectItems(field_full_path);
 
         this._field_Delete(field_full_path, trigger_on_change);
@@ -133,8 +133,8 @@ class RootField extends ObjectField
         }
 
         let field = this._$field_Get(field_full_path, true, field_value_is_object);
-        if ((abTypes.var(field, VarField) && field_value_is_object) ||
-                (abTypes.var(field, ObjectField) && !field_value_is_object)) {
+        if ((js0.var(field, VarField) && field_value_is_object) ||
+                (js0.var(field, ObjectField) && !field_value_is_object)) {
             this._$field_Delete(field_full_path, false);
             field = this._$field_Get(field_full_path, true, field_value_is_object);
         }
@@ -198,7 +198,7 @@ class RootField extends ObjectField
 
     _value_IsObject(value)
     {
-        return abTypes.var(value, [ abTypes.RawObject, Array, Map, Set ]);
+        return js0.var(value, [ js0.RawObject, Array, Map, Set ]);
     }
 
     _value_Set_FromObject(field_full_path, field_object)
@@ -239,15 +239,15 @@ class RootField extends ObjectField
 
     _value_ToObject(value)
     {
-        if (abTypes.var(value, Map))
+        if (js0.var(value, Map))
             return value;
-        else if (abTypes.var(value, abTypes.RawObject)) {
+        else if (js0.var(value, js0.RawObject)) {
             let map = new Map();
             Object.keys(value).forEach(key => {
                 map.set(key, value[key]);
             });
             return map;
-        } else if (abTypes.var(value, Array)) {
+        } else if (js0.var(value, Array)) {
             let map = new Map();
             value.map((value, index) => {
                 map.set(index, value);

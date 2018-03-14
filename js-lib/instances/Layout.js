@@ -1,8 +1,8 @@
 'use strict';
 
-const abNodes = require('../ab-nodes');
-const abTypes = require('ab-types');
-const abLayouts = require('../ab-layouts');
+const abNodes = require('ab-nodes');
+const js0 = require('js0');
+const abLayouts = require('ab-layouts');
 
 const Viewable = require('../core/Viewable');
 const LayoutParser = require('../core/LayoutParser');
@@ -32,8 +32,8 @@ class Layout
 
     constructor(layout_node, fields, elems, nodes)
     {
-        abTypes.argsE(arguments, abLayouts.LayoutNode);
-        abTypes.prop(this, Layout.Viewable, layout_node);
+        js0.args(arguments, abLayouts.LayoutNode);
+        js0.prop(this, Layout.Viewable, layout_node);
 
         Object.defineProperties(this, {
             _fields: { value: fields, },

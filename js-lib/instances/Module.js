@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const Viewable = require('../core/Viewable');
 const Layout = require('./Layout');
@@ -63,8 +63,8 @@ Object.defineProperties(Module, {
 
             constructor()
             { super();
-                abTypes.prop(this, Module);
-                abTypes.prop(this, Module.Viewable, this);
+                js0.prop(this, Module);
+                js0.prop(this, Module.Viewable, this);
 
                 Object.defineProperties(this, {
                     $path: { value: module_path, },
@@ -114,10 +114,10 @@ Object.defineProperties(Module, {
 
             if (view === null)
                 return [];
-            else if (abTypes.implements(view, Viewable))
+            else if (js0.implements(view, Viewable))
                 return view._$viewable.getNodes();
 
-            abTypes.assert(false, '`view` does not implement `Viewable`.');
+            js0.assert(false, '`view` does not implement `Viewable`.');
         }
 
     }},

@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 
 class Viewable
@@ -16,7 +16,7 @@ class Viewable
         this._view = null;
     }
 
-    getNodes() { throw new abTypes.NotImplemented(); }
+    getNodes() { throw new js0.NotImplemented(); }
 
     // static Validate(object)
     // {

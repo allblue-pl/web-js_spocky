@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 
 class Field
@@ -69,8 +69,8 @@ class Field
     }
 
 
-    __value_OnGet() { abTypes.virtual(this); }
-    __value_OnSet() { abTypes.virtual(this); }
+    __value_OnGet() { js0.virtual(this); }
+    __value_OnSet() { js0.virtual(this); }
 
 }
 module.exports = Field;

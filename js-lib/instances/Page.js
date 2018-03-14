@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const PageInfo = require('../core/PageInfo');
 
@@ -10,7 +10,7 @@ class Page
 
     constructor(page_info, page_args)
     {
-        abTypes.argsE(arguments, PageInfo, 'object');
+        js0.args(arguments, PageInfo, 'object');
 
         Object.defineProperties(this, {
             info: { value: page_info, },

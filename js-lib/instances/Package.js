@@ -1,6 +1,6 @@
 'use strict'
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const Viewable = require('../core/Viewable');
 

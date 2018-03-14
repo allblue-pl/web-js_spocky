@@ -1,9 +1,9 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const abFields = require('./ab-fields');
-const abNodes = require('./ab-nodes');
+const abNodes = require('ab-nodes');
 
 const App = require('./instances/App');
 const Config = require('./instances/Config');
@@ -12,11 +12,10 @@ const Module = require('./instances/Module');
 const Package = require('./instances/Package');
 const Page = require('./instances/Page');
 
-
 const Infos = require('./core/Infos');
 
 
-const spocky = new class spocky
+class spocky_Class
 {
 
     get nodes() {
@@ -24,7 +23,7 @@ const spocky = new class spocky
     }
 
     get types() {
-        return abTypes;
+        return js0;
     }
 
     get Fields() {
@@ -48,30 +47,30 @@ const spocky = new class spocky
         });
     }
 
-    app(app_init_fn)
+    app(app_initFn)
     {
-        abTypes.argsE(arguments, 'function');
+        js0.args(arguments, 'function');
 
         this._infos.appInits.push({
-            initFn: app_init_fn,
+            initFn: app_initFn,
         });
     }
 
-    config(init_fn)
+    config(initFn)
     {
-        abTypes.argsE(arguments, 'function');
+        js0.args(arguments, 'function');
 
         this._infos.configs.push({
-            initFn: init_fn,
+            initFn: initFn,
         });
     }
 
-    ext(ext_init_fn)
+    ext(ext_initFn)
     {
-        abTypes.argsE(arguments, 'function');
+        js0.args(arguments, 'function');
 
         this._infos.appInits.push({
-            initFn:ext_init_fn,
+            initFn:ext_initFn,
         });
     }
 
@@ -87,60 +86,60 @@ const spocky = new class spocky
         new App(this._infos);
     }
 
-    layout(layout_path, layout_init_fn)
+    layout(layoutPath, layoutInitPath)
     {
-        this._layout(layout_path, layout_init_fn, false);
+        this._layout(layoutPath, layoutInitPath, false);
     }
 
-    layout_Raw(layout_path, layout_init_fn)
+    layout_Raw(layoutPath, layoutInitPath)
     {
-        this._layout(layout_path, layout_init_fn, true);
+        this._layout(layoutPath, layoutInitPath, true);
     }
 
-    package(package_path, package_init_fn, package_prototype = null)
+    package(packagePath, packageInitFn, packagePrototype = null)
     {
-        abTypes.argsE(arguments, 'string', 'function', [ 'function', abTypes.Default ]);
+        js0.args(arguments, 'string', 'function', [ 'function', js0.Default ]);
 
         if (this._initialized)
             throw new Error('Cannot define package after initialization.');
 
-        let package_info = null;
-        if (package_path in this._infos.packages) {
-            package_info = this._infos.packages[package_path];
+        let packageInfo = null;
+        if (packagePath in this._infos.packages) {
+            packageInfo = this._infos.packages[packagePath];
 
-            if (package_info.prototype !== null && package_prototype !== null)
+            if (packageInfo.prototype !== null && packagePrototype !== null)
                 throw new Error('Cannot redeclare package prototype.');
         } else {
-            package_info = {
-                path: package_path,
+            packageInfo = {
+                path: packagePath,
                 initFns: [],
-                prototype: package_prototype,
+                prototype: packagePrototype,
             };
-            this._infos.packages[package_path] = package_info;
+            this._infos.packages[packagePath] = packageInfo;
         }
 
-        package_info.initFns.push(package_init_fn);
-        if (package_prototype !== null)
-            package_info.prototype = package_prototype;
+        packageInfo.initFns.push(packageInitFn);
+        if (packagePrototype !== null)
+            packageInfo.prototype = packagePrototype;
     }
 
 
-    _layout(layout_path, layout_init_fn, raw)
+    _layout(layoutPath, layoutInitPath, raw)
     {
-        abTypes.argsE(arguments, 'string', 'function', 'boolean');
+        js0.args(arguments, 'string', 'function', 'boolean');
 
         if (this._initialized)
             throw new Error('Cannot define layout after initialization.');
 
-        if (layout_path in this._infos.layouts) {
+        if (layoutPath in this._infos.layouts) {
             if (this._$debug)
-                console.warn('Layout `' + layout_path + '` already exists. Overwriting.');
+                console.warn('Layout `' + layoutPath + '` already exists. Overwriting.');
         }
 
-        this._infos.layouts[layout_path] = {
+        this._infos.layouts[layoutPath] = {
             raw: raw,
-            path: layout_path,
-            initFn: layout_init_fn,
+            path: layoutPath,
+            initFn: layoutInitPath,
         };
     }
 
@@ -153,5 +152,5 @@ const spocky = new class spocky
         this._setPage(page_info.name, page_info.args, push_state);
     }
 
-}();
-module.exports = spocky;
+};
+module.exports = new spocky_Class();

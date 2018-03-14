@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const ConfigInfo = require('../core/ConfigInfo');
 const ContainerInfo = require('../core/ContainerInfo');
@@ -11,67 +11,67 @@ const PageInfo = require('../core/PageInfo');
 class Config
 {
 
-    constructor(infos, config_configInfo)
+    constructor(infos, configInfo)
     {
-        abTypes.argsE(arguments, Infos, ConfigInfo);
+        js0.args(arguments, Infos, ConfigInfo);
 
         this._infos = infos;
-        this._configInfo = config_configInfo;
+        this._configInfo = configInfo;
     }
 
-    base(base_uri)
+    base(baseUri)
     {
-        abTypes.argsE(arguments, 'string');
+        js0.args(arguments, 'string');
 
-        this._configInfo.baseUri = base_uri;
+        this._configInfo.baseUri = baseUri;
 
         return this;
     }
 
-    container(html_element_id, modules_map)
+    container(htmlElementId, modulesMap)
     {
-        abTypes.argsE(arguments, 'string', Map);
+        js0.args(arguments, 'string', Map);
 
         /* Validate HTML Element */
-        let html_element = document.getElementById(html_element_id);
-        if (html_element === null)
-            throw new Error(`\`HtmlElement\` with id \`${html_element_id}\` does not exist.`);
+        let htmlElement = document.getElementById(htmlElementId);
+        if (htmlElement === null)
+            throw new Error(`\`HtmlElement\` with id \`${htmlElementId}\` does not exist.`);
 
         /* Create Container */
-        let container_info = new ContainerInfo(html_element_id, html_element,
-                modules_map);
+        let containerInfo = new ContainerInfo(htmlElementId, htmlElement,
+                modulesMap);
         /* Validate Module Paths */
-        for (let root_module_configInfo of container_info.rootModuleInfos) {
+        for (let root_module_configInfo of containerInfo.rootModuleInfos) {
             let path_configInfo = root_module_configInfo.pathInfo;
             if (!(path_configInfo.packagePath in this._infos.packages))
                 throw new Error(`Module \`${path_configInfo.fullPath}\` package does not exist.`);
         }
 
-        this._configInfo.containerInfos.set(container_info.id, container_info);
+        this._configInfo.containerInfos.set(containerInfo.id, containerInfo);
         /* / Create Container */
 
         return this;
     }
 
-    hash(use_hash)
+    hash(useHash)
     {
-        abTypes.argsE(arguments, 'boolean');
+        js0.args(arguments, 'boolean');
 
-        this._configInfo.useHash = use_hash;
+        this._configInfo.useHash = useHash;
 
         return this;
     }
 
-    page(page_name, page_alias)
+    page(pageName, pageAlias)
     {
-        abTypes.argsE(arguments, 'string', 'string');
+        js0.args(arguments, 'string', 'string');
 
-        if (page_name in this._configInfo.pages.keys()) {
-            throw new Error('Root module with id `' + page_name +
+        if (pageName in this._configInfo.pages.keys()) {
+            throw new Error('Root module with id `' + pageName +
                     '` already exists.');
         }
 
-        this._configInfo.pages.set(page_name, new PageInfo(page_name, page_alias));
+        this._configInfo.pages.set(pageName, new PageInfo(pageName, pageAlias));
 
         return this;
     }

@@ -8,7 +8,7 @@ class MultiView
 
     constructor()
     {
-        abTypes.prop(this, MultiView.Viewable)
+        js0.prop(this, MultiView.Viewable)
         Object.defineProperties(this, {
             _views: { value: [] },
         });
@@ -16,7 +16,7 @@ class MultiView
 
     push(viewable)
     {
-        if (!abTypes.implements(viewable, Viewable))
+        if (!js0.implements(viewable, Viewable))
             throw new Error('`viewable` must implement `Viewable`.');
 
         this._views.push(viewable);

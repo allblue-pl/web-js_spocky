@@ -1,9 +1,9 @@
 'use strict';
 
 const abFields = require('../ab-fields');
-const abLayouts = require('../ab-layouts');
-const abNodes = require('../ab-nodes');
-const abTypes = require('ab-types');
+const abLayouts = require('ab-layouts');
+const abNodes = require('ab-nodes');
+const js0 = require('js0');
 
 const Elems = require('../instances/Elems');
 const LayoutInfo = require('./LayoutInfo');
@@ -398,7 +398,7 @@ class LayoutParser extends abLayouts.Parser
     _getNodeMatchingCopies(define_field_path, field_path, node,
             instance_keys, extra_instance_keys = [])
     {
-        abTypes.implementsE(node, abNodes.Node.PCopyable);
+        js0.implementsE(node, abNodes.Node.PCopyable);
 
         instance_keys = this._getInstanceKeysFromPath(define_field_path,
                 field_path, instance_keys);

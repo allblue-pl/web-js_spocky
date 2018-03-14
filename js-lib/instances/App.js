@@ -1,6 +1,6 @@
 'use strict';
 
-const abNodes = require('../ab-nodes');
+const abNodes = require('ab-nodes');
 
 const ConfigInfo = require('../core/ConfigInfo');
 const Uri = require('../core/Uri');

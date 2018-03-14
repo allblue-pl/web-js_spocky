@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 const Field = require('../Field');
 const FieldError = require('../FieldError');
@@ -25,7 +25,7 @@ class ObjectField extends Field
         //     },
         // });
         Object.defineProperties(this, {
-            _fieldFullPaths: { value: new abTypes.List(), },
+            _fieldFullPaths: { value: new js0.List(), },
         });
     }
 
@@ -68,7 +68,7 @@ class ObjectField extends Field
 
     $set(field_path, field_value)
     {
-        abTypes.argsE(arguments, [ 'string', 'number' ], null);
+        js0.args(arguments, [ 'string', 'number' ], null);
 
         this._$rootField._$value_Set(`${this._$fullPath}.${field_path}`, field_value);
 
