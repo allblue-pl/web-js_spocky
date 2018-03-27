@@ -1,36 +1,47 @@
 'use strict'
 
-const js0 = require('js0');
+const 
+    js0 = require('js0'),
 
-const Viewable = require('../core/Viewable');
-
-const Module = require('./Module');
-
+    Module = require('../Module'),
+    App = require('./App')
+;
 
 class Package
 {
 
-    constructor(package_path)
+    constructor(app, packagePath)
     {
+        js0.args(arguments, App, 'string');
+
         Object.defineProperties(this, {
-            $path: { value: package_path, },
+            $path: { value: packagePath, },
         });
     }
 
-    module(module_name, module_init_fn, module_prototype = null)
+    create(createPath, ...args)
     {
-        if (this._$initialized)
-            throw new Error('Cannot declare modules after initialization.');
+        if (!(createPath in this))
+            throw new Error(`Module '${this.$path}.${createPath}' does not exist.`);
 
-        let module_class = Module.CreatePublic(this, module_name, module_init_fn,
-                module_prototype);
+        if (typeof this[createPath] !== 'function')
+            throw new Error(`'${this.$path}.${createPath}' is not creatable.`);
 
-        Object.defineProperty(this, '$' + module_name, {
-            value: module_class,
+        return new (Function.prototype.bind.apply(this[createPath], args))();
+    }
+
+    export(moduleFn)
+    {
+        let moduleName = moduleFn.name;
+        Object.defineProperty(this, moduleName, {
+            value: moduleFn,
             enumerable: true,
         });
+    }
 
-        return this;
+    import(importPath)
+    {
+
     }
 
 }

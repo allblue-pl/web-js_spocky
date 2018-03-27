@@ -1,175 +1,90 @@
 'use strict';
 
-const abNodes = require('ab-nodes');
+const 
+    abNodes = require('ab-nodes'),
+    js0 = require('js0'),
 
-const ConfigInfo = require('../core/ConfigInfo');
-const Uri = require('../core/Uri');
+    ConfigInfo = require('../ConfigInfo'),
+    Inits = require('../Inits'),
+    Layout = require('../Layout'),
+    Module = require('../Module'),
+    PathInfo = require('../PathInfo'),
 
-const Package = require('../instances/Package');
-
-const Layout = require('./Layout');
-
+    Config = require('./Config'),
+    Package = require('./Package')
+;
 
 class App
 {
 
-    get page() {
-        return ;
-    }
-
-    get state() {
-        return this._state;
-    }
-
-    get uri() {
-        return ;
-    }
-
-
-    constructor(infos)
+    constructor(inits)
     {
-        let config = new ConfigInfo(infos);
+        js0.args(arguments, Inits);
+
+        let config = new ConfigInfo();
 
         Object.defineProperties(this, {
-            _infos: { value: infos, },
-
-            _config: { value: config, },
-            _uri: { value: new Uri(config), },
-            _packages: { value: new App.Packages(this, infos) },
-
-            _state: { value: App.State.None, writable: true, },
-
-            _rootModules: { value: new Map(), },
+            _config: { value: new ConfigInfo(), },
+            _inits: { value: inits, },
+            _jsLibs: { value: new jsLibs_Class(), },
         });
 
-        this._config.init();
+        /* Export Packages */
+        for (let [ packagePath, packageInits ] of inits.package) {
+            this._jsLibs.exportModule(packagePath, 'index', (require, module) => {
+                let pkg = new Package(this, packagePath);
+                for (let initFn of packageInits)
+                    initFn(this, pkg);
 
-        this._state = App.State.Initializing;
-        for (let app_init_info of this._infos.appInits)
-            app_init_info.initFn(this);
-
-        window.onpopstate = function() {
-            this._parseUri(this._getUri());
-        };
-        this._parseUri(this._getUri());
-    }
-
-    import(package_path)
-    {
-        return this._packages.import(package_path, this._state);
-    }
-
-    module(module_path)
-    {
-        let module_path_info = new Module.PathInfo(module_path);
-
-        let package_instance = this.import(module_path_info.packagePath);
-
-        return package_instance._$createModule(module_path_info.moduleName);
-    }
-
-    layout(layout_path)
-    {
-        if (!(layout_path in this._infos.layouts))
-            throw new Error('Layout `' + layout_path + '` does not exist.');
-
-        let layout_info = this._infos.layouts[layout_path];
-        if (layout_info.raw)
-            return new Layout(layout_info.initFn());
-        else
-            return Layout.Parse(layout_info.initFn());
-    }
-
-    setPage(page_name, args)
-    {
-
-    }
-
-    setUri(uri)
-    {
-
-    }
-
-
-    _getUri()
-    {
-        if (this._config.useHash) {
-            return window.location.hash === '' ?
-                    '' : window.location.hash.substring(1);
-        } else
-            return window.location.pathname + window.location.search;
-    }
-
-    _parseUri(uri, push_state)
-    {
-        this._state = App.State.LoadingRootPackages;
-        let page = this._uri.parse(uri);
-        if (page === null)
-            throw new Error(`No page matches uri \`${uri}\`.`);
-
-        this._setPage(page);
-    }
-
-    _setPage(page)
-    {
-        this._packages.coreImport_Start();
-
-        if (this._config.containerInfos.size === 0)
-            throw new Error('No conainers set in config.');
-
-        /* Get Root Module Info */
-        for (let container_info of this._config.containerInfos.values()) {
-            let root_module_info = container_info.getRootModuleInfo_FromPageName(
-                    page.info.name);
-            if (root_module_info === null) {
-                throw new Error(`Page name \`${page.info.name}\` does not match any` +
-                        ` module in container \`${container_info.id}\`.`);
-            }
-            let module_path_info = root_module_info.pathInfo;
-
-            /* Package */
-            let package_path = module_path_info.packagePath;
-            let package_info = this._infos.packages[package_path];
-            let package_instance = new Package(package_path);
-            for (let i = 0; i < package_info.initFns.length; i++)
-                package_info.initFns[i](this, package_instance);
-
-            /* Module */
-            let module_name = module_path_info.moduleName;
-            if (!('$' + module_name in package_instance)) {
-                throw new Error(`Root module \`${module_path_info.path}\`` +
-                        ` does not exist.`);
-            }
-
-            let init_fn = package_instance['$' + module_name];
-            let root_module = new package_instance['$' + module_name]();
-
-            let root_node = new abNodes.RootNode(container_info.htmlElement);
-            let root_module_nodes = root_module._$viewable.getNodes();
-
-            for (let i = 0; i < root_module_nodes.length; i++)
-                root_node.pChildren.add(root_module_nodes[i]);
-            root_node.activate();
+                module.exports = pkg;
+            });
         }
 
+        /* Confit Init */
+        let cfg = new Config(this._config);
+        this._inits.config(this, cfg);
 
-        this._packages.coreImport_Finish();
+        /* App Inits */
+        for (let initFn of this._inits.app)
+            initFn(this);
+
+        /* Containers Init */
+        for (let [ containerId, containerInfo ] of this._config.containerInfos) {
+            let rootNode = new abNodes.RootNode(containerInfo.htmlElement);
+            let module = this.create(containerInfo.modulePath);
+
+            rootNode.activate();
+            module._$viewable.activate(rootNode);
+        }
+    }
+
+    import(importPath)
+    {
+        js0.args(arguments, 'string');
+
+        let importPathArr = importPath.split('.');
+        let packagePath = importPathArr[0];
+
+        let pkg = this._jsLibs.importModule(packagePath, 'index');
+
+        if (importPathArr.length > 1) {
+            if (!(importPathArr[1] in pkg))
+                throw new Error(`Package property '${importPathArr[1]}' does not exist`);
+
+            return pkg[importPathArr[1]];
+        }
+
+        return pkg;
+    }
+
+    create(fullCreatePath)
+    {
+        let createPathInfo = new PathInfo(fullCreatePath);
+
+        let pkg = this.import(createPathInfo.packagePath);
+
+        return pkg.create(createPathInfo.name);
     }
 
 }
 module.exports = App;
-
-
-Object.defineProperties(App, {
-
-    State: { value:
-    Object.create(null, {
-        None: { value: 0, },
-        Initializing: { value: 1, },
-        Running: { value: 2, },
-    })},
-
-});
-
-
-require('./App.Packages');

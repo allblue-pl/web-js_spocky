@@ -1,78 +1,81 @@
 'use strict';
 
-const js0 = require('js0');
+const 
+    js0 = require('js0'),
 
-const abFields = require('./ab-fields');
-const abNodes = require('ab-nodes');
+    // test = require('test'),
 
-const App = require('./instances/App');
-const Config = require('./instances/Config');
-const Layout = require('./instances/Layout');
-const Module = require('./instances/Module');
-const Package = require('./instances/Package');
-const Page = require('./instances/Page');
+    App = require('./instances/App'),
+    // Config = require('./instances/Config'),
+    // Layout = require('./instances/Layout'),
+    // Package = require('./instances/Package'),
+    // Page = require('./instances/Page'),
 
-const Infos = require('./core/Infos');
-
+    Inits = require('./Inits'),
+    Layout = require('./Layout'),
+    Module = require('./Module')
+;
 
 class spocky_Class
 {
 
-    get nodes() {
-        return abNodes;
+    get Layout() {
+        return Layout;
     }
 
-    get types() {
-        return js0;
-    }
-
-    get Fields() {
-        return abFields.RootField;
+    get Module() {
+        return Module;
     }
 
 
     constructor()
     {
+        this._debug = false;
+        this._initialized = false;
+
         Object.defineProperties(this, {
-            App: { value: App, },
-            Config: { value: Config, },
-            Layout: { value: Layout, },
-            Module: { value: Module, },
-            Package: { value: Package, },
-            Page: { value: Page, },
+            _debug: { value: false, readonly: false },
+            _initialized: { value: false, readonly: false },
 
-            _infos: { value: new Infos() },
+            _inits: { value: new Inits() },
+        //     App: { value: App, },
+        //     Config: { value: Config, },
+        //     Layout: { value: Layout, },
+        //     Module: { value: Module, },
+        //     Package: { value: Package, },
+        //     Page: { value: Page, },
 
-            _initialized: { value: false, writable: true, },
+            // _infos: { value: new Infos() },
+
+        //     _initialized: { value: false, writable: true, },
         });
     }
 
-    app(app_initFn)
+    app(appInitFn)
     {
         js0.args(arguments, 'function');
 
-        this._infos.appInits.push({
-            initFn: app_initFn,
-        });
+        this._inits.app.push(appInitFn);
     }
 
     config(initFn)
     {
         js0.args(arguments, 'function');
 
-        this._infos.configs.push({
-            initFn: initFn,
-        });
+        if (this._inits.config !== null)
+            throw new Error('Config already declared.');
+
+        this._inits.config = initFn;
     }
 
-    ext(ext_initFn)
-    {
-        js0.args(arguments, 'function');
+    // ext(ext_initFn)
+    // {
+    //     js0.args(arguments, 'function');
 
-        this._infos.appInits.push({
-            initFn:ext_initFn,
-        });
-    }
+    //     this._infos.appInits.push({
+    //         initFn:ext_initFn,
+    //     });
+    // }
 
     init(debug = false)
     {
@@ -80,77 +83,66 @@ class spocky_Class
             throw new Error('`spocky` already initialized.');
         this._initialized = true;
 
-        this._$debug = debug;
+        this._debug = debug;
 
         /* Config */
-        new App(this._infos);
+        new App(this._inits);
     }
 
-    layout(layoutPath, layoutInitPath)
+    layout(layoutPath, layoutInitFn)
     {
-        this._layout(layoutPath, layoutInitPath, false);
-    }
-
-    layout_Raw(layoutPath, layoutInitPath)
-    {
-        this._layout(layoutPath, layoutInitPath, true);
-    }
-
-    package(packagePath, packageInitFn, packagePrototype = null)
-    {
-        js0.args(arguments, 'string', 'function', [ 'function', js0.Default ]);
-
-        if (this._initialized)
-            throw new Error('Cannot define package after initialization.');
-
-        let packageInfo = null;
-        if (packagePath in this._infos.packages) {
-            packageInfo = this._infos.packages[packagePath];
-
-            if (packageInfo.prototype !== null && packagePrototype !== null)
-                throw new Error('Cannot redeclare package prototype.');
-        } else {
-            packageInfo = {
-                path: packagePath,
-                initFns: [],
-                prototype: packagePrototype,
-            };
-            this._infos.packages[packagePath] = packageInfo;
-        }
-
-        packageInfo.initFns.push(packageInitFn);
-        if (packagePrototype !== null)
-            packageInfo.prototype = packagePrototype;
-    }
-
-
-    _layout(layoutPath, layoutInitPath, raw)
-    {
-        js0.args(arguments, 'string', 'function', 'boolean');
+        js0.args(arguments, 'string', 'function');
 
         if (this._initialized)
             throw new Error('Cannot define layout after initialization.');
 
-        if (layoutPath in this._infos.layouts) {
-            if (this._$debug)
-                console.warn('Layout `' + layoutPath + '` already exists. Overwriting.');
-        }
+        if (layoutPath in this._inits.layout)
+            throw new Error(`Layout '${layoutPath}' already exists.`);
 
-        this._infos.layouts[layoutPath] = {
-            raw: raw,
-            path: layoutPath,
-            initFn: layoutInitPath,
-        };
+        this._inits.layout[layoutPath] = layoutInitFn;
     }
 
-    _parseUri(uri, push_state)
+    package(packagePath, packageInitFn)
     {
-        let page_info = this._uri.parse(uri);
-        if (page_info === null)
-            throw new Error(`No page matches uri \`${uri}\`.`);
+        js0.args(arguments, 'string', 'function');
 
-        this._setPage(page_info.name, page_info.args, push_state);
+        if (this._initialized)
+            throw new Error('Cannot define package after initialization.');
+
+        if (!(packagePath in this._inits.package))
+            this._inits.package.set(packagePath, []);
+
+        this._inits.package.get(packagePath).push(packageInitFn);
     }
+
+
+    // _layout(layoutPath, layoutInitPath, raw)
+    // {
+    //     js0.args(arguments, 'string', 'function', 'boolean');
+
+    //     if (this._initialized)
+    //         throw new Error('Cannot define layout after initialization.');
+
+    //     if (layoutPath in this._infos.layouts) {
+    //         if (this._$debug)
+    //             console.warn('Layout `' + layoutPath + '` already exists. Overwriting.');
+    //     }
+
+    //     this._infos.layouts[layoutPath] = {
+    //         raw: raw,
+    //         path: layoutPath,
+    //         initFn: layoutInitPath,
+    //     };
+    // }
+
+    // _parseUri(uri, push_state)
+    // {
+    //     let page_info = this._uri.parse(uri);
+    //     if (page_info === null)
+    //         throw new Error(`No page matches uri \`${uri}\`.`);
+
+    //     this._setPage(page_info.name, page_info.args, push_state);
+    // }
 
 };
 module.exports = new spocky_Class();
