@@ -19,7 +19,7 @@ class Package
         });
     }
 
-    create(createPath, ...args)
+    $create(createPath, ...args)
     {
         if (!(createPath in this))
             throw new Error(`Module '${this.$path}.${createPath}' does not exist.`);
@@ -30,7 +30,7 @@ class Package
         return new (Function.prototype.bind.apply(this[createPath], args))();
     }
 
-    export(moduleFn)
+    $export(moduleFn)
     {
         let moduleName = moduleFn.name;
         Object.defineProperty(this, moduleName, {
@@ -39,9 +39,9 @@ class Package
         });
     }
 
-    import(importPath)
+    $import(importPath)
     {
-
+        return this._jsLibs.importModule(importPath)
     }
 
 }
