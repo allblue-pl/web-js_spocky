@@ -12,8 +12,12 @@ const
 class Module
 {
 
+    get $name() {
+        return this.constructor.name;
+    }
+
     set $view(value) {
-        if (!js0.type(value, [ Layout, Module, js0.Null ]))
+        if (!js0.type(value, [ require('./Layout'), require('./Module'), js0.Null ]))
             throw new Error(`'$view' must be 'Layout', 'Module' or 'Null'.`);
 
         if (this._view !== null)
@@ -67,7 +71,7 @@ Object.defineProperties(Module, {
         {
             if (this._module._view === null)
                 return;
-            else if (js.type(this._view, js0.Prop(Viewable)))
+            else if (js0.type(this._module._view, js0.Prop(Viewable)))
                 this._module._view._$viewable.deactivate();
             else
                 js0.assert(`Unknown view type.`);

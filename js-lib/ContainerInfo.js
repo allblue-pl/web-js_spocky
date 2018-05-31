@@ -8,14 +8,14 @@ const js0 = require('js0');
 class ContainerInfo
 {
 
-    constructor(containerId, htmlElement, modulePath)
+    constructor(containerId, htmlElement, moduleClass)
     {
-        js0.args(arguments, 'string', HTMLElement, 'string');
+        js0.args(arguments, 'string', HTMLElement, 'function');
 
         Object.defineProperties(this, {
             id: { value: containerId, },
             htmlElement: { value: htmlElement, },
-            modulePath: { value: modulePath, },
+            moduleClass: { value: moduleClass, },
         });
     }
 

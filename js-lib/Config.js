@@ -5,6 +5,7 @@ const js0 = require('js0');
 const ConfigInfo = require('../ConfigInfo');
 const ContainerInfo = require('../ContainerInfo');
 const Inits = require('../Inits');
+const Module = require('../Module');
 
 
 class Config
@@ -17,9 +18,9 @@ class Config
         this._configInfo = configInfo;
     }
 
-    container(htmlElementId, modulePath)
+    container(htmlElementId, moduleClass)
     {
-        js0.args(arguments, 'string', 'string');
+        js0.args(arguments, 'string', 'function');
 
         /* Validate HTML Element */
         let htmlElement = document.getElementById(htmlElementId);
@@ -28,7 +29,7 @@ class Config
 
         /* Create Container */
         let containerInfo = new ContainerInfo(htmlElementId, htmlElement,
-                modulePath);
+                moduleClass);
 
         // /* Validate Module Paths */
         // for (let modulePath of containerInfo.modulePath) {            

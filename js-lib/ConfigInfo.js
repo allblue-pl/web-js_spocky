@@ -2,7 +2,7 @@
 
 const js0 = require('js0');
 
-const Config = require('../instances/Config');
+const Config = require('./Config');
 const Inits = require('./Inits');
 
 
