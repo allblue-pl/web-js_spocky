@@ -1,16 +1,30 @@
 'use strict';
 
 const
+    js0 = require('js0'),
+
     abFields = require('ab-fields')
 ;
 
+export const Ext = require('./Ext');
+export const Layout = require('./Layout');
+export const Module = require('./Module');
+export const Site = require('./Site');
 
-module.exports.Debug = false;
-module.exports.setDebug = function setDebug(debug) {
+
+const exts = [];
+
+export function ext(spockyExt) {
+    js0.args(arguments, Ext);
+
+    Layout.Parser.extend((nodeElement) => {
+        spockyExt.onParseNodeElement(nodeElement);
+    });
+}
+
+
+export const Debug = false;
+export function setDebug(debug) {
     module.exports.Debug = debug;
     abFields.setDebug(debug);
 };
-
-module.exports.Layout = require('./Layout');
-module.exports.Module = require('./Module');
-module.exports.Site = require('./Site');

@@ -11,6 +11,26 @@ const
 class Layout
 {
 
+    Replace(layoutContent, replaceFrom, replaceTo)
+    {
+        for (let index in layoutContent) {
+            if (js0.type(nodeContent[index], 'string')) {
+                nodeContent[index] === layoutContent[index]
+                        .replace(new RegExp(replaceFrom, 'g'), replaceTo);
+            } else if (js0.type(nodeContent[index], js0.RawObject)) {
+                for (let objectKey in nodeContent[index]) {
+                    if (typeof nodeContent[index][objectKey] === 'string') {
+                        nodeContent[index][objectKey] === layoutContent[index][objectKey]
+                                .replace(new RegExp(replaceFrom, 'g'), replaceTo);
+                    }
+                }
+            } else if (js0.type(nodeContent[index], Array)) {
+                Layout.Replace(nodeContent[index], replaceFrom, replaceTo);
+            }
+        }
+    }
+
+
     constructor(layoutContent)
     {
         js0.args(arguments, Array);
@@ -26,6 +46,11 @@ class Layout
 
             _layoutNode: { value: layoutNode, },
         });
+    }
+
+    _parse(layoutContent)
+    {
+        
     }
 
 }
@@ -47,7 +72,7 @@ Object.defineProperties(Layout, {
         __activate(parentNode)
         {
             parentNode.pChildren.add(this._layout._layoutNode);
-            console.log('Adding child:', this._layout._layoutNode, 'to', parentNode);
+            // console.log('Adding child:', this._layout._layoutNode, 'to', parentNode);
             // this._layout._layoutNode.activate();
         }
 

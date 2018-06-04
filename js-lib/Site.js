@@ -52,6 +52,8 @@ class Site
         js0.args(arguments, 'function');
 
         this._inits.app.push(appInitFn);
+
+        return this;
     }
 
     config(initFn)
@@ -62,6 +64,8 @@ class Site
             throw new Error('Config already declared.');
 
         this._inits.config = initFn;
+
+        return this;
     }
 
     // ext(ext_initFn)
@@ -83,6 +87,8 @@ class Site
 
         /* Config */
         new App(this._inits);
+
+        return this;
     }
 
     // layout(layoutPath, layoutInitFn)
@@ -98,18 +104,18 @@ class Site
     //     this._inits.layout[layoutPath] = layoutInitFn;
     // }
 
-    package(packagePath, packageInitFn)
-    {
-        js0.args(arguments, 'string', 'function');
+    // package(packagePath, packageInitFn)
+    // {
+    //     js0.args(arguments, 'string', 'function');
 
-        if (this._initialized)
-            throw new Error('Cannot define package after initialization.');
+    //     if (this._initialized)
+    //         throw new Error('Cannot define package after initialization.');
 
-        if (!this._inits.package.has(packagePath))
-            this._inits.package.set(packagePath, []);
+    //     if (!this._inits.package.has(packagePath))
+    //         this._inits.package.set(packagePath, []);
 
-        this._inits.package.get(packagePath).push(packageInitFn);
-    }
+    //     this._inits.package.get(packagePath).push(packageInitFn);
+    // }
 
 
     // _layout(layoutPath, layoutInitPath, raw)
