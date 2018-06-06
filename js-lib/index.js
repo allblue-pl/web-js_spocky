@@ -17,8 +17,8 @@ const exts = [];
 export function ext(spockyExt) {
     js0.args(arguments, Ext);
 
-    Layout.Parser.extend((nodeElement) => {
-        spockyExt.onParseNodeElement(nodeElement);
+    Layout.Extensions.push((layoutNode) => {
+        spockyExt.onParseLayoutNode(layoutNode);
     });
 }
 

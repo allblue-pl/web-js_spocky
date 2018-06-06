@@ -12,12 +12,16 @@ const
 class LayoutParser extends abLayouts.Parser
 {
 
+    get data() {
+        return this._data;
+    }
+
     get elems() {
         return this._elems;
     }
 
     get fields() {
-        return this._fields.$value;
+        return this._fields;
     }
 
     get holders() {
@@ -28,6 +32,20 @@ class LayoutParser extends abLayouts.Parser
     constructor()
     {
         super();
+
+        this._fieldNameRegexp = new RegExp('^' + this.getFieldNameRegexp() + '$');
+
+        this._fieldDefinitions = abFields.define();
+
+        this._fields = null;        
+        this._elems = {};
+        this._holders = {};
+        this._data = {};
+    }
+
+    getFieldNameRegexp()
+    {
+        return '([a-zA-Z0-9._]+)(\((.*)\))?';
     }
 
 
@@ -48,6 +66,7 @@ class LayoutParser extends abLayouts.Parser
         this._createElement_AddSingle(nodeInfo, tElementsStack, element);
         this._createElement_AddHolder(nodeInfo, tElementsStack, element);
         this._createElement_ParseElem(nodeInfo, tElementsStack, element);
+        this._createElement_ParseData(nodeInfo, tElementsStack, element);
 
         return element;
     }
@@ -141,6 +160,7 @@ class LayoutParser extends abLayouts.Parser
     {
         if (!('_show' in nodeInfo.attribs))
             return;
+        this._validateFieldName(nodeInfo.attribs._show[0], false);
 
         let node = new abNodes.ShowNode();
         this._createElement_UpdateElement(element, node);
@@ -187,7 +207,7 @@ class LayoutParser extends abLayouts.Parser
 
             let attribArr = attribs[attribName];
             for (let attribPart of attribArr) {
-                if (attribPart[0] !== '$')
+                if (!this._isFieldName(attribPart))
                     continue;
 
                 let fieldInfo = new LayoutParser.FieldInfo(attribPart.substring(1));
@@ -218,7 +238,7 @@ class LayoutParser extends abLayouts.Parser
             } else {
                 let attrib = '';
                 for (let attribPart of attribArr)
-                    attrib += attribPart[0] === '$' ? '' : attribPart;
+                    attrib += this._isFieldName(attribPart) ? '' : attribPart;
                 node.htmlElement.setAttribute(attribName, attrib);
             }
         }
@@ -228,7 +248,7 @@ class LayoutParser extends abLayouts.Parser
     {
         let attrib = '';
         for (let attribPart of attribArr) {
-            if (attribPart[0] === '$') {
+            if (this._isFieldName(attribPart)) {
                 let fieldInfo = new LayoutParser.FieldInfo(attribPart.substring(1));
                 let fieldValue = fieldInfo.getField(this._fields, repeatInfo, 
                         instanceKeys).$value;
@@ -239,6 +259,24 @@ class LayoutParser extends abLayouts.Parser
         }
 
         return attrib;
+    }
+
+    _createElement_ParseData(nodeInfo, elementsStack, element)
+    {
+        for (let attribName in nodeInfo.attribs) {
+            if (attribName.indexOf('_data-') !== 0)
+                continue;
+
+            let attribArr = nodeInfo.attribs[attribName];
+
+            let dataName = attribName.substring(`_data-`.length);
+            let data = attribArr[0].replace(/\\"/g, '"');
+    
+            if (!(dataName in this._data))
+                this._data[dataName] = [];
+    
+            this._data[dataName].push(data);
+        }
     }
 
     _createElement_ParseElem(nodeInfo, elementsStack, element)
@@ -295,7 +333,7 @@ class LayoutParser extends abLayouts.Parser
     {
         let node = null;
 
-        if (nodeContent[0] === '$') {
+        if (this._isFieldName(nodeContent)) {
             node = new abNodes.TextNode('');
 
             let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
@@ -447,6 +485,18 @@ class LayoutParser extends abLayouts.Parser
         // return null;
     }
 
+    _isFieldName(fieldName, includesPrefix = true)
+    {
+        if (includesPrefix) {
+            if (fieldName[0] !== '$')
+                return false;
+
+            return fieldName.substring(1).match(this._fieldNameRegexp) !== null;
+        }
+
+        return fieldName.match(this._fieldNameRegexp) !== null;
+    }
+
     _isVirtual(elementsStack)
     {
         for (let i = 0; i < elementsStack.length; i++) {
@@ -457,20 +507,17 @@ class LayoutParser extends abLayouts.Parser
         return false;
     }
 
+    _validateFieldName(fieldName, includesPrefix = true)
+    {
+        if (!this._isFieldName(fieldName, includesPrefix))
+            throw new Error(`'${fieldName}' is not a valid field name.`);
+    }
+
 
     /* abLayouts.Parser Overrides */
     __afterParse()
     {
         this._fields = this._fieldDefinitions.create();
-    }
-    
-    __beforeParse()
-    {
-        this._fieldDefinitions = abFields.define();
-
-        this._fields = null;
-        this._elems = {};
-        this._holders = {};
     }
     
     __createElement(nodeInfo, elementsStack)
@@ -513,6 +560,9 @@ Object.defineProperties(LayoutParser, {
             let repeatsOffset = 0;
             for (let part of rawParts) {
                 if (field instanceof abFields.ObjectField) {
+                    console.log(rawParts);
+                    console.log(field);
+
                     field = field.$get(part);
                     fieldPath += (fieldPath !== '' ? '.' : '') + part;
                 }
