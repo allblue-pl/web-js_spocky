@@ -560,9 +560,6 @@ Object.defineProperties(LayoutParser, {
             let repeatsOffset = 0;
             for (let part of rawParts) {
                 if (field instanceof abFields.ObjectField) {
-                    console.log(rawParts);
-                    console.log(field);
-
                     field = field.$get(part);
                     fieldPath += (fieldPath !== '' ? '.' : '') + part;
                 }
