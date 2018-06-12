@@ -23,8 +23,8 @@ export function ext(spockyExt) {
 }
 
 
-export const Debug = false;
+export let Debug = false;
 export function setDebug(debug) {
-    module.exports.Debug = debug;
+    exports.Debug = debug;
     abFields.setDebug(debug);
 };

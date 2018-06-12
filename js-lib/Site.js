@@ -19,18 +19,11 @@ const
 class Site
 {
 
-    get debug() {
-        return this._debug;
-    }
-
-
     constructor()
     {
-        this._debug = false;
         this._initialized = false;
 
         Object.defineProperties(this, {
-            _debug: { value: false, readonly: false },
             _initialized: { value: false, readonly: false },
 
             _inits: { value: new Inits() },
@@ -77,13 +70,11 @@ class Site
     //     });
     // }
 
-    init(debug = false)
+    init()
     {
         if (this._initialized)
             throw new Error('`spocky` already initialized.');
         this._initialized = true;
-
-        this._debug = debug;
 
         /* Config */
         new App(this._inits);

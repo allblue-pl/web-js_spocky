@@ -37,9 +37,6 @@ class Layout
                 
                 let newString = array[i].replace(new RegExp(replaceFrom, 'g'), replaceTo);
                 let newStringArr = Layout._Replace_ParseFields(newString);
-
-                if (replaceFrom === '{{fullFieldName}}')     
-                    console.log('Replacing: ', array[i], newString);
             
                 array.splice(i, 1);
                 for (let j = 0; j < newStringArr.length; j++)

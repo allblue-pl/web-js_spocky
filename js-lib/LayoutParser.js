@@ -6,6 +6,7 @@ const
     abNodes = require('ab-nodes'),
     js0 = require('js0'),
 
+    spocky = require('.'),
     Holder = require('./Holder')
 ;
 
@@ -283,6 +284,13 @@ class LayoutParser extends abLayouts.Parser
     {
         if (!('_elem' in nodeInfo.attribs))
             return;
+
+        let elemName = nodeInfo.attribs._elem[0];
+        if (elemName in this._elems) {
+            if (spocky.Debug)
+                console.warn(`Element '${elemName}' already exist. Skipping.`);
+            return;
+        }
 
         let node = element.bottomNode;
 
