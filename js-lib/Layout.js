@@ -17,32 +17,51 @@ class Layout
 
         Layout._Replace_ReplaceInArray(layoutContent, replaceFrom, replaceTo);
 
-        for (let index in layoutContent) {
-            if (js0.type(layoutContent[index], js0.RawObject)) {
-                for (let objectKey in layoutContent[index]) {                    
-                    if (js0.type(layoutContent[index][objectKey], Array)) {
-                        Layout._Replace_ReplaceInArray(layoutContent[index][objectKey], 
-                                replaceFrom, replaceTo);
-                    }
-                }
-            } else if (js0.type(layoutContent[index], Array))
-                Layout.Replace(layoutContent[index], replaceFrom, replaceTo);
-        }
+        // for (let index in layoutContent) {
+        //     if (js0.type(layoutContent[index], js0.RawObject)) {
+        //         for (let objectKey in layoutContent[index]) {                    
+        //             if (js0.type(layoutContent[index][objectKey], Array)) {
+        //                 Layout._Replace_ReplaceInArray(layoutContent[index][objectKey], 
+        //                         replaceFrom, replaceTo);
+        //             }
+        //         }
+        //     } else if (js0.type(layoutContent[index], Array))
+        //         Layout.Replace(layoutContent[index], replaceFrom, replaceTo);
+        // }
     }
 
     static _Replace_ReplaceInArray(array, replaceFrom, replaceTo)
     {
         for (let i = 0; i < array.length; i++) {
-            if (typeof array[i] === 'string') {                
+            if (typeof array[i] === 'string') {     
+                
                 let newString = array[i].replace(new RegExp(replaceFrom, 'g'), replaceTo);
                 let newStringArr = Layout._Replace_ParseFields(newString);
+
+                if (replaceFrom === '{{fullFieldName}}')     
+                    console.log('Replacing: ', array[i], newString);
             
                 array.splice(i, 1);
                 for (let j = 0; j < newStringArr.length; j++)
                     array.splice(i + j, 0, newStringArr[j]);
 
                 i += newStringArr.length - 1;
-            }
+            } else if (js0.type(array[i], Array))
+                Layout._Replace_ReplaceInArray(array[i], replaceFrom, replaceTo);
+            else if (js0.type(array[i], js0.RawObject))
+                Layout._Replace_ReplaceInObject(array[i], replaceFrom, replaceTo);
+        }
+    }
+
+    static _Replace_ReplaceInObject(object, replaceFrom, replaceTo)
+    {
+        for (let key in object) {
+            if (js0.type(object[key], 'string'))
+                object[key] = object[key].replace(new RegExp(replaceFrom, 'g'), replaceTo);
+            else if (js0.type(object[key], Array))
+                Layout._Replace_ReplaceInArray(object[key], replaceFrom, replaceTo);
+            else if (js0.type(object[key], js0.RawObject))
+                Layout._Replace_ReplaceInObject(object[key], replaceFrom, replaceTo);
         }
     }
 
