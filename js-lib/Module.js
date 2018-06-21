@@ -20,12 +20,12 @@ class Module
         if (!js0.type(value, [ require('./Layout'), require('./Module'), js0.Null ]))
             throw new Error(`'$view' must be 'Layout', 'Module' or 'Null'.`);
 
-        if (this._view !== null)
-            this._view._$viewable.deactivate();
+        if (this._$view !== null)
+            this._$view._$viewable.deactivate();
 
-        this._view = value;
-        if (this._parentNode !== null)
-            this._view._$viewable.activate(this._parentNode);
+        this._$view = value;
+        if (this._$view !== null && this._$parentNode !== null)
+            this._$view._$viewable.activate(this._$parentNode);
     }
 
 
@@ -34,9 +34,24 @@ class Module
         js0.prop(this, Module.Viewable, this);
 
         Object.defineProperties(this, {
-            _view: { value: null, writable: true, },
-            _parentNode: { value: null, writable: true, },
+            _$view: { value: null, writable: true, },
+            _$parentNode: { value: null, writable: true, },
+
+            _$listeners: { value: {
+                onActivate: [],
+                onDeactivate: [],
+            }},
         });
+    }
+
+    $onActivate(listener)
+    {
+        this._$listeners.onActivate.push(listener);
+    }
+
+    $onDeactivate(listener)
+    {
+        this._$listeners.onDeactivate.push(listener);
     }
 
 }
@@ -46,37 +61,48 @@ module.exports = Module;
 Object.defineProperties(Module, {
 
     Viewable: { value:
-    class Module_Viewable extends Viewable {
+    class Module_$viewable extends Viewable {
 
         constructor(module)
         { super()
             js0.args(arguments, Module);
 
             this._module = module;
+            this._onDisplay = (displayed) => {
+                for (let listener of this._module._$listeners.onDisplay)
+                    listener(displayed);
+            };
         }
 
         __activate(parentNode)
         {
-            this._module._parentNode = parentNode;
+            this._module._$parentNode = parentNode;
+            // console.log(parentNode, 'Added listener.');
 
-            if (this._module._view === null)
-                return;
-            else if (js0.type(this._module._view, js0.Prop(Viewable)))
-                this._module._view._$viewable.activate(parentNode);
+            if (this._module._$view === null) {
+                // Do nothing.
+            } else if (js0.type(this._module._$view, js0.Prop(Viewable)))
+                this._module._$view._$viewable.activate(parentNode);
             else
                 js0.assert(`Unknown view type.`);
+
+            for (let listener of this._module._$listeners.onActivate)
+                listener();
         }
 
         __deactivate(parentNode)
         {
-            if (this._module._view === null)
+            for (let listener of this._module._$listeners.onDeactivate)
+                listener();
+
+            if (this._module._$view === null)
                 return;
-            else if (js0.type(this._module._view, js0.Prop(Viewable)))
-                this._module._view._$viewable.deactivate();
+            else if (js0.type(this._module._$view, js0.Prop(Viewable)))
+                this._module._$view._$viewable.deactivate();
             else
                 js0.assert(`Unknown view type.`);
 
-            this._module._parentNode = null;
+            this._module._$parentNode = null;
         }
 
     }},

@@ -19,7 +19,8 @@ class Holder
             this._view._$viewable.deactivate();
 
         this._view = value;
-        this._view._$viewable.activate(this._layoutNode);
+        if (this._view !== null)
+            this._view._$viewable.activate(this._layoutNode);
     }
 
 

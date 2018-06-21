@@ -17,12 +17,17 @@ class Viewable
         return this._active;
     }
 
+    get displayed() {
+        return this._displayed;
+    }
+
 
     constructor()
     {
         Object.defineProperties(this, {
             _parentNode: { value: null, writable: true, },
-            _active: { value: null, writable: true, },
+            _active: { value: false, writable: true, },
+            _displayed: { value: false, writable: true, },
         });
     }
 
@@ -53,19 +58,19 @@ class Viewable
     }
 
     
-    _setParentNode(parentNode) {
-        js0.args(arguments, abNodes.Node);
+    // _setParentNode(parentNode) {
+    //     js0.args(arguments, abNodes.Node);
 
-        if (!js0.type(parentNode, js0.Prop(abNodes.Node.PChildren)))
-            throw new Error(`'parentNode' does not have 'PChildren' property.`);
+    //     if (!js0.type(parentNode, js0.Prop(abNodes.Node.PChildren)))
+    //         throw new Error(`'parentNode' does not have 'PChildren' property.`);
 
-        if (this._parentNode !== null && this._active)
-            this.deactivate();
+    //     if (this._parentNode !== null && this._active)
+    //         this.deactivate();
 
-        this._parentNode = parentNode;
-        if (this._active)
-            this.activate();
-    }
+    //     this._parentNode = parentNode;
+    //     if (this._active)
+    //         this.activate();
+    // }
 
 
     __activate(parentNode) { js0.virtual(this); }

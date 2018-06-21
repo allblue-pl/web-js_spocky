@@ -98,12 +98,12 @@ class Layout
         let layoutParser = new LayoutParser();
         for (let ext of Layout.Extensions)
             layoutParser.extend(ext);
-        let layoutNode = layoutParser.parse(layoutContent);
+        let layoutNode = layoutParser.parse(layoutContent);        
 
         this._fields = layoutParser.fields;
-        this._data = layoutParser.data;
-        this._elems = layoutParser.elems;
-        this._holders = layoutParser._holders;
+        this._$data = layoutParser.data;
+        this._$elems = layoutParser.elems;
+        this._$holders = layoutParser.holders;
 
         Object.defineProperties(this, {
             $fields: {
@@ -115,17 +115,24 @@ class Layout
                 },
             },
 
-            $data: { value: this._data, },
-            $elems: { value: this._elems, },
-            $holders: { value: this._holders, },
+            $data: { value: this._$data, },
+            $elems: { value: this._$elems, },
+            $holders: { value: this._$holders, },
 
-            _layoutNode: { value: layoutNode, },
+            _$layoutNode: { value: layoutNode, },
+
+            _$listeners_OnDisplay: { value: [], },
+        });
+
+        layoutNode.addListener_OnDisplay((display) => {
+            for (let listener of this._$listeners_OnDisplay)
+                listener(display);
         });
     }
 
-    _parse(layoutContent)
+    $onDisplay(listener)
     {
-        
+        this._$listeners_OnDisplay.push(listener);
     }
 
 }
@@ -146,15 +153,15 @@ Object.defineProperties(Layout, {
 
         __activate(parentNode)
         {
-            parentNode.pChildren.add(this._layout._layoutNode);
-            // console.log('Adding child:', this._layout._layoutNode, 'to', parentNode);
-            // this._layout._layoutNode.activate();
+            parentNode.pChildren.add(this._layout._$layoutNode);
+            // console.log('Adding child:', this._layout._$layoutNode, 'to', parentNode);
+            // this._layout._$layoutNode.activate();
         }
 
         __deactivate(parentNode)
         {
-            parentNode.pChildren.remove(this._layout._layoutNode);
-            // this._layout._layoutNode.deactivate();
+            parentNode.pChildren.remove(this._layout._$layoutNode);
+            // this._layout._$layoutNode.deactivate();
         }
 
     }},
