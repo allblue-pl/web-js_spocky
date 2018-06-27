@@ -40,6 +40,8 @@ class App
         for (let [ containerId, containerInfo ] of this._config.containerInfos) {
             let rootNode = new abNodes.RootNode(containerInfo.htmlElement);
             let module = new containerInfo.moduleClass();
+            if (!(module instanceof Module))
+                throw new Error(`Containers '${containerId}' class is not a Spocky module.`);
 
             rootNode.activate();
             module._$viewable.activate(rootNode);

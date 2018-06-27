@@ -189,7 +189,7 @@ class LayoutParser extends abLayouts.Parser
 
     _createElement_AddSingle(nodeInfo, elementsStack, element)
     {
-        if (nodeInfo.type === '$')
+        if (nodeInfo.type === '$' || nodeInfo.type === '_')
             return;
 
         let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
