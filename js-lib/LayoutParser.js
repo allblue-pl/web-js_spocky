@@ -61,9 +61,9 @@ class LayoutParser extends abLayouts.Parser
     {
         let element = new abLayouts.Parser.Element(null, null, {});
 
-        this._createElement_AddShow(nodeInfo, elementsStack, element);
         this._createElement_AddRepeat(nodeInfo, elementsStack, element);
         let tElementsStack = elementsStack.concat([ element ]);
+        this._createElement_AddShow(nodeInfo, tElementsStack, element);
         this._createElement_AddSingle(nodeInfo, tElementsStack, element);
         this._createElement_AddHolder(nodeInfo, tElementsStack, element);
         this._createElement_ParseElem(nodeInfo, tElementsStack, element);
@@ -189,7 +189,7 @@ class LayoutParser extends abLayouts.Parser
 
     _createElement_AddSingle(nodeInfo, elementsStack, element)
     {
-        if (nodeInfo.type === '$' || nodeInfo.type === '_')
+        if (nodeInfo.type === '$') // || nodeInfo.type === '_')
             return;
 
         let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
