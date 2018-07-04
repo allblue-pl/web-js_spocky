@@ -63,6 +63,7 @@ class LayoutParser extends abLayouts.Parser
 
         this._createElement_AddRepeat(nodeInfo, elementsStack, element);
         let tElementsStack = elementsStack.concat([ element ]);
+        this._createElement_AddHide(nodeInfo, tElementsStack, element);
         this._createElement_AddShow(nodeInfo, tElementsStack, element);
         this._createElement_AddSingle(nodeInfo, tElementsStack, element);
         this._createElement_AddHolder(nodeInfo, tElementsStack, element);
@@ -70,6 +71,36 @@ class LayoutParser extends abLayouts.Parser
         this._createElement_ParseData(nodeInfo, tElementsStack, element);
 
         return element;
+    }
+
+    _createElement_AddHide(nodeInfo, elementsStack, element)
+    {
+        if (!('_hide' in nodeInfo.attribs))
+            return;
+        this._validateFieldName(nodeInfo.attribs._hide[0], false);
+
+        let node = new abNodes.HideNode();
+        this._createElement_UpdateElement(element, node);
+
+        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
+        let fieldInfo = new LayoutParser.FieldInfo(nodeInfo.attribs._hide[0]);
+
+        let fd = this._defineField(repeatInfo, fieldInfo, abFields.VarDefinition);
+    
+        fd.addListener({
+            set: (value, keys) => {
+                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
+                for (let nodeInstance of nodeInstances)
+                    nodeInstance.hide = value ? true : false;
+            },
+        });
+
+        if (repeatInfo.virtual) {
+            node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
+                let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+                nodeInstance.hide = field.$value ? true : false;
+            });
+        }
     }
 
     _createElement_AddHolder(nodeInfo, elementsStack, element)
@@ -552,7 +583,7 @@ Object.defineProperties(LayoutParser, {
             let match = regexp.exec(fieldPath);
 
             this.fieldPath = match[1];
-            this.args = typeof match[3] === 'undefined' ? null : match[2];
+            this.args = typeof match[3] === 'undefined' ? null : match[3];
             this.parts = this.fieldPath.split('.');
             this.name = this.parts[this.parts.length - 1];
         }
