@@ -66,11 +66,60 @@ class LayoutParser extends abLayouts.Parser
         this._createElement_AddHide(nodeInfo, tElementsStack, element);
         this._createElement_AddShow(nodeInfo, tElementsStack, element);
         this._createElement_AddSingle(nodeInfo, tElementsStack, element);
+        this._createElement_AddField(nodeInfo, tElementsStack, element);
         this._createElement_AddHolder(nodeInfo, tElementsStack, element);
         this._createElement_ParseElem(nodeInfo, tElementsStack, element);
         this._createElement_ParseData(nodeInfo, tElementsStack, element);
 
         return element;
+    }
+
+    _createElement_AddField(nodeInfo, elementsStack, element)
+    {
+        if (!('_field' in nodeInfo.attribs))
+            return;
+        if (nodeInfo.type === '$') // || nodeInfo.type === '_')
+            throw new Error(`'_field' cannot be in virtual node.`);
+        this._validateFieldName(nodeInfo.attribs._field[0], false);
+
+        let singleNode = element.bottomNode;
+
+        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
+        let fieldInfo = new LayoutParser.FieldInfo(nodeInfo.attribs._field[0]);
+
+        let fdVar = this._defineField(repeatInfo, fieldInfo, abFields.VarDefinition);
+
+        fdVar.addListener({
+            set: (value, keys) => {
+                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                        singleNode, keys);
+                for (let nodeInstance of nodeInstances) {
+                    value = typeof value === 'function' ? eval(`value(${fieldInfo.args})`) : value;
+                    if (value === null)
+                        value = '';
+                    else if (typeof value === 'undefined')
+                        value = '';
+
+                    nodeInstance.htmlElement.innerHTML = value;
+                }
+            },
+        });
+
+        if (repeatInfo.virtual) {
+            singleNode.pCopyable.onCreate((nodeInstance, instanceKeys) => {  
+                let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+
+                let value = typeof field.$value === 'function' ?
+                        eval(`field.$value(${fieldInfo.args})`) : field.$value;
+                if (value === null)
+                    value = '';
+                else if (typeof value === 'undefined')
+                    value = '';
+
+                nodeInstance.htmlElement.innerHTML = value;
+
+            });
+        }
     }
 
     _createElement_AddHide(nodeInfo, elementsStack, element)
