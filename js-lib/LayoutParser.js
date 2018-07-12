@@ -39,7 +39,7 @@ class LayoutParser extends abLayouts.Parser
         this._fieldDefinitions = abFields.define();
 
         this._fields = null;        
-        this._elems = {};
+        this._elems = new LayoutParser.Elems();
         this._holders = {};
         this._data = {};
     }
@@ -366,9 +366,12 @@ class LayoutParser extends abLayouts.Parser
             return;
 
         let elemName = nodeInfo.attribs._elem[0];
-        if (elemName in this._elems) {
-            if (spocky.Debug)
-                console.warn(`Element '${elemName}' already exist. Skipping.`);
+        if (this._elems.$exists(elemName)) {
+            if (spocky.Debug) {
+                console.warn(`Element '${elemName}' already exist. Skipping in:`, 
+                        nodeInfo, new Error());
+            }
+
             return;
         }
 
@@ -378,11 +381,25 @@ class LayoutParser extends abLayouts.Parser
 
         if (repeatInfo.virtual) {
             element.info.onCreateFn = null;
+            element.info.onDestroyFn = null;
 
+            this._elems._declare(elemName);
             node.pCopyable.onCreate((node) => {
+                let keys = node.pCopyable.getInstanceKeys();
+
+                this._elems._add(elemName, keys, node.htmlElement);
+
                 if (element.info.onCreateFn !== null) {
-                    element.info.onCreateFn(node.htmlElement, 
-                            node.pCopyable.getInstanceKeys());
+                    element.info.onCreateFn(node.htmlElement, keys);
+                }
+            });
+            node.pCopyable.onDestroy((node) => {
+                let keys = node.pCopyable.getInstanceKeys();
+
+                this._elems._remove(elemName, keys);
+
+                if (element.info.onDestroyFn !== null) {
+                    element.info.onDestroyFn(node.htmlElement, keys);
                 }
             });
 
@@ -400,6 +417,9 @@ class LayoutParser extends abLayouts.Parser
                 }
             });
         } else {
+            this._elems._declare(elemName);
+            this._elems._add(elemName, [], node.htmlElement);
+
             Object.defineProperty(this._elems, nodeInfo.attribs._elem, {
                 get: () => {
                     return node.htmlElement;
@@ -622,6 +642,82 @@ module.exports = LayoutParser;
 
 
 Object.defineProperties(LayoutParser, {
+
+    Elems: { value:
+    class LayoutParser_Elems {
+
+        constructor()
+        {
+            this._elemInfos = {};
+        }
+        
+        $exists(elemName)
+        {
+            js0.args(arguments, 'string');
+
+            return elemName in this._elemInfos; 
+        }
+
+        $get(elemName, keys)
+        {
+            js0.args(arguments, 'string', Array);
+
+            if (!(elemName in this._elemInfos))
+                throw new Error(`Elem '${elemName}' does not exist.`);
+
+            return this._get(elemName, keys);
+        }
+
+        _add(elemName, keys, elem)
+        {
+            this._elemInfos[elemName].push({
+                elem: elem,
+                keys: keys,
+            });
+        }
+
+        _declare(elemName)
+        {
+            this._elemInfos[elemName] = [];
+        }
+
+        _get(elemName, keys)
+        {
+            for (let elemInfo of this._elemInfos[elemName]) {
+                if (this._keysMatch(elemInfo.keys, keys))
+                    return elemInfo.elem;
+            }
+
+            throw new Error(`Elem '${elemName}' with keys '` + keys.join(', ') +
+                    `' does not exist.`);
+        }
+
+        _keysMatch(keysA, keysB)
+        {
+            if (keysA.length !== keysB.length)
+                return false;
+
+            for (let i = 0; i < keysA.length; i++) {
+                if (keysA[i] !== keysB[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        _remove(elemName, keys)
+        {
+            for (let i = 0; i < this._elemInfos[elemName].length; i++) {
+                if (this._keysMatch(this._elemInfos.keys, keys)) {
+                    this._elemInfos[elemName].splice(i, 1);
+                    break;
+                }
+            }
+
+            throw new Error(`Elem '${elemName}' does not exist.`);
+        }
+
+    }},
 
     FieldInfo: { value:
     class LayoutParser_FieldInfo {
