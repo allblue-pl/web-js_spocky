@@ -69,23 +69,23 @@ class Layout
         // if (newString.substring(0, 6) === '$eText')
         //     console.log('T1', newString);
 
-        let r = /(^|([^\\]))\${?([a-zA-Z][a-zA-Z0-9._]*)}?(\(.*\))?/g;
+        let r = /(^|[^\\])\${?([a-zA-Z][a-zA-Z0-9._]*)}?(\(.*\))?/g;
         let offset = 0;
         while(true) {
             let match = r.exec(string);
             if (match === null)
                 break;
 
-            let index = typeof match[2] === 'undefined' ?
+            let index = match[1].length === 0 ?
                     match.index : match.index + 1;
 
             let text = string.substring(offset, index);
             if (text !== '')
                 lTextsArr.push(text);
 
-            let args = typeof match[4] === 'undefined' ? '' : match[4];
-            lTextsArr.push(`$${match[3]}${args}`);
-            offset = match[0].length;
+            let args = typeof match[3] === 'undefined' ? '' : match[3];
+            lTextsArr.push(`$${match[2]}${args}`);
+            offset = match.index + match[0].length;
         }
 
         let text = string.substring(offset);
