@@ -46,7 +46,7 @@ class LayoutParser extends abLayouts.Parser
 
     getFieldNameRegexp()
     {
-        return '([a-zA-Z0-9._]+)(\((.*)\))?';
+        return '([a-zA-Z][a-zA-Z0-9._]*)(\((.*)\))?';
     }
 
 
@@ -298,7 +298,8 @@ class LayoutParser extends abLayouts.Parser
 
                 fd.addListener({
                     set: (value, keys) => {
-                        let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
+                        let nodeInstances = this._getNodeInstances(repeatInfo, 
+                                fieldInfo, node, keys);
                         for (let nodeInstance of nodeInstances) {
                             let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
                             let attrib = this._createElement_AddSingle_GetAttrib(
@@ -724,9 +725,10 @@ Object.defineProperties(LayoutParser, {
 
         constructor(fieldPath)
         {
-            let regexp = /^([a-zA-Z0-9._]+)(\((.*)\))?$/;
+            let regexp = /^([a-zA-Z][a-zA-Z0-9._]*)(\((.*)\))?$/;
             let match = regexp.exec(fieldPath);
 
+            // console.log(fieldPath, match);
             this.fieldPath = match[1];
             this.args = typeof match[3] === 'undefined' ? null : match[3];
             this.parts = this.fieldPath.split('.');
