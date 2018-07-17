@@ -37,7 +37,7 @@ Object.defineProperties(MultiView, {
     class extends Viewable {
 
         constructor(multi_view)
-        {
+        { super();
             this._multiView = multi_view;
         }
 
