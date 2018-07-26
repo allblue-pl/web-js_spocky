@@ -213,12 +213,14 @@ class LayoutParser extends abLayouts.Parser
         
         fd.addListener({
             add: (key, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
+                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                        node, keys);
                 for (let nodeInstance of nodeInstances)
                     nodeInstance.add(key);
             },
             delete: (key, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
+                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                        node, keys);
                 for (let nodeInstance of nodeInstances)
                     nodeInstance.delete(key);
             },
