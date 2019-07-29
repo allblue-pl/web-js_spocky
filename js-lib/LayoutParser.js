@@ -78,7 +78,7 @@ class LayoutParser extends abLayouts.Parser
     {
         if (!('_field' in nodeInfo.attribs))
             return;
-        if (nodeInfo.type === '$') // || nodeInfo.type === '_')
+        if (nodeInfo.type === '$')
             throw new Error(`'_field' cannot be in virtual node.`);
         this._validateFieldName(nodeInfo.attribs._field[0], false);
 
@@ -271,7 +271,7 @@ class LayoutParser extends abLayouts.Parser
 
     _createElement_AddSingle(nodeInfo, elementsStack, element)
     {
-        if (nodeInfo.type === '$') // || nodeInfo.type === '_')
+        if (nodeInfo.type === '$')
             return;
 
         let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
@@ -285,7 +285,7 @@ class LayoutParser extends abLayouts.Parser
     _createElement_AddSingle_ParseAttribs(repeatInfo, node, attribs)
     {
         for (let attribName in attribs) {
-            if (attribName[0] === '_')
+            if (attribName[0] === '$')
                 continue;
 
             let attribArr = attribs[attribName];
