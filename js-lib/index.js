@@ -10,6 +10,7 @@ export const App = require('./App');
 export const Ext = require('./Ext');
 export const Layout = require('./Layout');
 export const Module = require('./Module');
+export const Viewable = require('./Viewable');
 
 
 const exts = [];

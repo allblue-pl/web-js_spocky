@@ -20,6 +20,9 @@ class Module
         if (!js0.type(value, [ require('./Layout'), require('./Module'), js0.Null ]))
             throw new Error(`'$view' must be 'Layout', 'Module' or 'Null'.`);
 
+        if (this._$view === value)
+            return;
+
         if (this._$view !== null)
             this._$view._$viewable.deactivate();
 
