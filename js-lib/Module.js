@@ -64,7 +64,7 @@ module.exports = Module;
 Object.defineProperties(Module, {
 
     Viewable: { value:
-    class Module_$viewable extends Viewable {
+    class Module_Viewable extends Viewable {
 
         constructor(module)
         { super()

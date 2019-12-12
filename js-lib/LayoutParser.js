@@ -107,6 +107,10 @@ class LayoutParser extends abLayouts.Parser
 
         if (repeatInfo.virtual) {
             singleNode.pCopyable.onCreate((nodeInstance, instanceKeys) => {  
+                /* Virtual Node */
+                if (instanceKeys.length < repeatInfo.repeats.length)
+                    return;
+
                 let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
 
                 let value = typeof field.$value === 'function' ?
@@ -146,6 +150,10 @@ class LayoutParser extends abLayouts.Parser
 
         if (repeatInfo.virtual) {
             node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
+                /* Virtual Node */
+                if (instanceKeys.length < repeatInfo.repeats.length)
+                    return;
+
                 let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
                 nodeInstance.hide = field.$value ? true : false;
             });
@@ -228,6 +236,10 @@ class LayoutParser extends abLayouts.Parser
 
         if (repeatInfo.virtual) {
             node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
+                /* Virtual Node */
+                if (instanceKeys.length < repeatInfo.repeats.length)
+                    return;
+
                 let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
 
                 for (let [ key, value ] of field)
@@ -263,6 +275,10 @@ class LayoutParser extends abLayouts.Parser
 
         if (repeatInfo.virtual) {
             node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
+                /* Virtual Node */
+                if (instanceKeys.length < repeatInfo.repeats.length)
+                    return;
+
                 let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
                 nodeInstance.show = field.$value ? true : false;
             });
@@ -315,6 +331,10 @@ class LayoutParser extends abLayouts.Parser
 
             if (repeatInfo.virtual) {
                 node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
+                    /* Virtual Node */
+                    if (instanceKeys.length < repeatInfo.repeats.length)
+                        return;
+
                     let attrib = this._createElement_AddSingle_GetAttrib(
                             attribArr, repeatInfo, instanceKeys);
                     nodeInstance.htmlElement.setAttribute(attribName, attrib);
@@ -389,6 +409,10 @@ class LayoutParser extends abLayouts.Parser
             this._elems._declare(elemName);
             node.pCopyable.onCreate((node) => {
                 let keys = node.pCopyable.getInstanceKeys();
+                
+                /* Virtual Node */
+                if (keys.length < repeatInfo.repeats.length)
+                    return;
 
                 this._elems._add(elemName, keys, node.htmlElement);
 
@@ -464,12 +488,26 @@ class LayoutParser extends abLayouts.Parser
             });
 
             if (repeatInfo.virtual) {
-                node.pCopyable.onCreate((nodeInstance, instanceKeys) => {  
-                    let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+                node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
+                    /* Virtual Node */
+                    if (instanceKeys.length < repeatInfo.repeats.length)
+                        return;
 
-                    nodeInstance.text = typeof field.$value === 'function' ?
+                    let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+                    let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+
+                    for (let nodeInstance of nodeInstances) {
+                        nodeInstance.text = typeof field.$value === 'function' ?
                             eval(`field.$value(${fieldInfo.args})`) : field.$value;
-                    // let nodeInstances = node.pCopyable.getNodeCopies(keys);
+                    }
+
+                    // if (field === null)
+                    //     nodeInstance.text = "";
+                    // else {
+                    //     nodeInstance.text = typeof field.$value === 'function' ?
+                    //             eval(`field.$value(${fieldInfo.args})`) : field.$value;
+                    // }
+                    
 
                 });
             }
@@ -756,10 +794,10 @@ Object.defineProperties(LayoutParser, {
                     let repeatFound = false;
                     for (let i = repeatsOffset; i < repeatInfo.repeats.length; i++) {
                         if (fieldPath === repeatInfo.repeats[i].fieldInfo.getFullPath(repeatInfo)) {
-                            if (keys[i] === null)
+                            if (keys[i] === null || typeof keys[i] === 'undefined')
                                 throw new Error('Instance keys to lists inconsistency.');
 
-                            field = field.$get(keys[i]);
+                            field = field.$get(keys[repeatsOffset]);
                             repeatsOffset = i + 1;
                             repeatFound = true;
                             break;
