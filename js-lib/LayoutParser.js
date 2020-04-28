@@ -167,23 +167,50 @@ class LayoutParser extends abLayouts.Parser
 
         let node = new abLayouts.LayoutNode();
         this._createElement_UpdateElement(element, node);
-        
-        if (this._isVirtual(elementsStack)) {
-            throw new Error('Not implemented yet.');
-            // element.info.onCreateFn = null;
-            
-            // node.pCopyable.onCreate((node) => {
-            //     if (element.info.onCreateFn !== null)
-            //         element.info.onCreateFn(node.htmlElement, node.pCopyable.getInstanceKeys());
-            // });
 
-            // Object.defineProperty(this._elems, nodeInfo.attribs._elem, {
-            //     get: () => {
-            //         return (onCreateFn) => {
-            //             element.info.onCreateFn = onCreateFn;
-            //         };
-            //     }
-            // });
+        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
+
+        if (repeatInfo.virtual) {
+            element.info.holders_OnCreateFn = null;
+            element.info.holders_OnDestroyFn = null;
+
+            // this._elems._declare(elemName);
+            node.pCopyable.onCreate((node) => {
+                let keys = node.pCopyable.getInstanceKeys();
+                
+                /* Virtual Node */
+                if (keys.length < repeatInfo.repeats.length)
+                    return;
+
+                // this._elems._add(elemName, keys, node.htmlElement);
+
+                if (element.info.holders_OnCreateFn !== null) {
+                    element.info.holders_OnCreateFn(new Holder(node), keys);
+                }
+            });
+            node.pCopyable.onDestroy((node) => {
+                let keys = node.pCopyable.getInstanceKeys();
+
+                // this._elems._remove(elemName, keys);
+
+                if (element.info.holders_OnDestroyFn !== null) {
+                    element.info.holders_OnDestroyFn(new Holder(node), keys);
+                }
+            });
+
+            Object.defineProperty(this._holders, nodeInfo.attribs._holder, {
+                get: () => {
+                    return (onCreateFn) => {
+                        element.info.holders_OnCreateFn = onCreateFn;
+
+                        let nodeInstances = node.pCopyable.getNodeCopies();
+                        for (let nodeInstance of nodeInstances) {
+                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                            onCreateFn(new Holder(nodeInstance), instanceKeys);
+                        }
+                    };
+                }
+            });
         } else {
             Object.defineProperty(this._holders, nodeInfo.attribs._holder, {
                 value: new Holder(node), 
@@ -220,11 +247,11 @@ class LayoutParser extends abLayouts.Parser
         };
         
         fd.addListener({
-            add: (key, keys) => {
+            add: (index, key, keys) => {
                 let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
                         node, keys);
                 for (let nodeInstance of nodeInstances)
-                    nodeInstance.add(key);
+                    nodeInstance.addAt(index, key);
             },
             delete: (key, keys) => {
                 let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
@@ -323,7 +350,10 @@ class LayoutParser extends abLayouts.Parser
                             let attrib = this._createElement_AddSingle_GetAttrib(
                                     attribArr, repeatInfo, instanceKeys);
 
-                            nodeInstance.htmlElement.setAttribute(attribName, attrib);
+                            if (attribName in nodeInstance.htmlElement)
+                                nodeInstance.htmlElement[attribName] = attrib;
+                            else
+                                nodeInstance.htmlElement.setAttribute(attribName, attrib);
                         }
                     },
                 });
@@ -403,8 +433,8 @@ class LayoutParser extends abLayouts.Parser
         let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
 
         if (repeatInfo.virtual) {
-            element.info.onCreateFn = null;
-            element.info.onDestroyFn = null;
+            element.info.elems_OnCreateFn = null;
+            element.info.elems_OnDestroyFn = null;
 
             this._elems._declare(elemName);
             node.pCopyable.onCreate((node) => {
@@ -416,8 +446,8 @@ class LayoutParser extends abLayouts.Parser
 
                 this._elems._add(elemName, keys, node.htmlElement);
 
-                if (element.info.onCreateFn !== null) {
-                    element.info.onCreateFn(node.htmlElement, keys);
+                if (element.info.elems_OnCreateFn !== null) {
+                    element.info.elems_OnCreateFn(node.htmlElement, keys);
                 }
             });
             node.pCopyable.onDestroy((node) => {
@@ -425,15 +455,15 @@ class LayoutParser extends abLayouts.Parser
 
                 this._elems._remove(elemName, keys);
 
-                if (element.info.onDestroyFn !== null) {
-                    element.info.onDestroyFn(node.htmlElement, keys);
+                if (element.info.elems_OnDestroyFn !== null) {
+                    element.info.elems_OnDestroyFn(node.htmlElement, keys);
                 }
             });
 
             Object.defineProperty(this._elems, nodeInfo.attribs._elem, {
                 get: () => {
                     return (onCreateFn) => {
-                        element.info.onCreateFn = onCreateFn;
+                        element.info.elems_OnCreateFn = onCreateFn;
                         
                         let nodeInstances = node.pCopyable.getNodeCopies();
                         for (let nodeInstance of nodeInstances) {
@@ -709,6 +739,24 @@ Object.defineProperties(LayoutParser, {
             return this._get(elemName, keys);
         }
 
+        $keys(elemName)
+        {
+            js0.args(arguments, 'string');
+
+            if (!this.$exists(elemName))
+                throw new Error(`Elem '${elemName}' does not exist.`);
+
+            let keys = [];
+            for (let elemInfo of this._elemInfos[elemName]) {
+                let keysArr = [];
+                for (let key of elemInfo.keys)
+                    keysArr.push(key);
+                keys.push(keysArr);
+            }
+
+            return keys;
+        }
+
         _add(elemName, keys, elem)
         {
             this._elemInfos[elemName].push({
@@ -748,14 +796,18 @@ Object.defineProperties(LayoutParser, {
 
         _remove(elemName, keys)
         {
+            if (!this.$exists(elemName))
+                throw new Error(`Elem '${elemName}' does not exist.`);
+
             for (let i = 0; i < this._elemInfos[elemName].length; i++) {
-                if (this._keysMatch(this._elemInfos.keys, keys)) {
+                if (this._keysMatch(this._elemInfos[elemName][i].keys, keys)) {
                     this._elemInfos[elemName].splice(i, 1);
-                    break;
+                    return;
                 }
             }
 
-            throw new Error(`Elem '${elemName}' does not exist.`);
+            let keysStr = keys.join(', ');
+            throw new Error(`Elem '${elemName}' with keys '${keysStr}' does not exist.`);
         }
 
     }},

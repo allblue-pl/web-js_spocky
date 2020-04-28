@@ -3,7 +3,8 @@
 const
     js0 = require('js0'),
 
-    abFields = require('ab-fields')
+    abFields = require('ab-fields'),
+    abNodes = require('ab-nodes')
 ;
 
 export const App = require('./App');
@@ -29,4 +30,5 @@ export let Debug = false;
 export function setDebug(debug) {
     exports.Debug = debug;
     abFields.setDebug(debug);
+    abNodes.setDebug(debug);
 };
