@@ -296,7 +296,7 @@ class LayoutParser extends abLayouts.Parser
             set: (value, keys) => {
                 let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
                 for (let nodeInstance of nodeInstances)
-                    nodeInstance.show = value ? true : false;
+                    nodeInstance.show = this._parseBoolean(value);
             },
         });
 
@@ -307,7 +307,7 @@ class LayoutParser extends abLayouts.Parser
                     return;
 
                 let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
-                nodeInstance.show = field.$value ? true : false;
+                nodeInstance.show = this._parseBoolean(field.$value);
             });
         }
     }
@@ -574,13 +574,25 @@ class LayoutParser extends abLayouts.Parser
 
         let lastPart = fieldInfo.parts[fieldInfo.parts.length - 1];
 
+        // let field = null;
+        // let fieldExists = fd.exists(lastPart);
+
+        // let fieldIsVar = fieldExists ? 
+        //         (fd.get(lastPart) instanceof abFields.VarDefinition ? true : false) : 
+        //         false;
+        // fieldExists = false;
+        // fieldIsVar = false;
+
         if (newFieldDefinitionClass === abFields.ObjectDefinition)
-            return fd.object(lastPart);
+            return fd.object(lastPart, false);
         else if (newFieldDefinitionClass === abFields.ListDefinition)
-            return fd.list(lastPart);
-        else if (newFieldDefinitionClass === abFields.VarDefinition)
+            return fd.list(lastPart, false);
+        else if (newFieldDefinitionClass === abFields.VarDefinition) {
+            // if (fieldExists && !fieldIsVar)
+            //     return fd.get(lastPart);
+
             return fd.var(lastPart);
-        else
+        } else
            throw new Error(`Unknown 'newFieldDefinitionClass'.`);
     }
 
@@ -684,6 +696,14 @@ class LayoutParser extends abLayouts.Parser
         }
 
         return false;
+    }
+
+    _parseBoolean(value)
+    {
+        if (typeof value === 'Array')
+            return value.length > 0;
+
+        return value ? true : false;
     }
 
     _validateFieldName(fieldName, includesPrefix = true)
