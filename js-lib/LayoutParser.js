@@ -7,10 +7,16 @@ const
     js0 = require('js0'),
 
     spocky = require('.'),
-    Holder = require('./Holder')
+    Holder = require('./Holder'),
+
+    Elems = require('./LayoutParser.Elems'),
+    FieldInfo = require('./LayoutParser.FieldInfo'),
+    FieldsHelper =  require('./LayoutParser.FieldsHelper'),
+    Holders = require('./LayoutParser.Holders'),
+    RepeatInfo = require('./LayoutParser.RepeatInfo')
 ;
 
-class LayoutParser extends abLayouts.Parser
+export default class LayoutParser extends abLayouts.Parser
 {
 
     get data() {
@@ -34,19 +40,12 @@ class LayoutParser extends abLayouts.Parser
     {
         super();
 
-        this._fieldNameRegexp = new RegExp('^' + this.getFieldNameRegexp() + '$');
-
-        this._fieldDefinitions = abFields.define();
+        this._fieldsHelper = new FieldsHelper();
 
         this._fields = null;        
-        this._elems = new LayoutParser.Elems();
-        this._holders = {};
+        this._elems = new Elems();
+        this._holders = new Holders();
         this._data = {};
-    }
-
-    getFieldNameRegexp()
-    {
-        return '([a-zA-Z][a-zA-Z0-9._]*)(\((.*)\))?';
     }
 
 
@@ -80,48 +79,43 @@ class LayoutParser extends abLayouts.Parser
             return;
         if (nodeInfo.type === '$')
             throw new Error(`'_field' cannot be in virtual node.`);
-        this._validateFieldName(nodeInfo.attribs._field[0], false);
+        this._fieldsHelper.validateFieldName(nodeInfo.attribs._field[0], false);
 
-        let singleNode = element.bottomNode;
+        let node = element.bottomNode;
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
-        let fieldInfo = new LayoutParser.FieldInfo(nodeInfo.attribs._field[0]);
+        let repeatInfo = new RepeatInfo(elementsStack);
+        let fieldInfo = this._fieldsHelper.def(repeatInfo, nodeInfo.attribs._field[0],
+                false, abFields.VarDefinition);
 
-        let fdVar = this._defineField(repeatInfo, fieldInfo, abFields.VarDefinition);
+        /* Default */
+        node.innerHTML = fieldInfo.getValue(this._fields, []);
 
-        fdVar.addListener({
-            set: (value, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                        singleNode, keys);
-                for (let nodeInstance of nodeInstances) {
-                    value = typeof value === 'function' ? eval(`value(${fieldInfo.args})`) : value;
-                    if (value === null)
-                        value = '';
-                    else if (typeof value === 'undefined')
-                        value = '';
+        /* Field Listeners */
+        for (let fd of fieldInfo.fieldDefinitions) {
+            fd.addListener({
+                change: (value, keys) => {
+                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                        node, keys);
+                    for (let nodeInstance of nodeInstances) {
+                        nodeInstance.htmlElement.innerHTML = fieldInfo.getValue(
+                                this._fields, keys);
+                    }
+                },
+            });
+        }
 
-                    nodeInstance.htmlElement.innerHTML = value;
-                }
-            },
-        });
-
+        /* Virtual */
         if (repeatInfo.virtual) {
-            singleNode.pCopyable.onCreate((nodeInstance, instanceKeys) => {  
+            node.pCopyable.onCreate((nodeInstance, instanceKeys) => {  
                 /* Virtual Node */
                 if (instanceKeys.length < repeatInfo.repeats.length)
                     return;
 
-                let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+                let value = fieldInfo.getValue(this._fields, instanceKeys);
 
-                let value = typeof field.$value === 'function' ?
-                        eval(`field.$value(${fieldInfo.args})`) : field.$value;
-                if (value === null)
-                    value = '';
-                else if (typeof value === 'undefined')
-                    value = '';
-
-                nodeInstance.htmlElement.innerHTML = value;
-
+                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                for (let nodeInstance of nodeInstances)
+                    nodeInstance.htmlElement.innerHTML = value;
             });
         }
     }
@@ -130,32 +124,44 @@ class LayoutParser extends abLayouts.Parser
     {
         if (!('_hide' in nodeInfo.attribs))
             return;
-        this._validateFieldName(nodeInfo.attribs._hide[0], false);
+        this._fieldsHelper.validateFieldName(nodeInfo.attribs._hide[0], false);
 
         let node = new abNodes.HideNode();
         this._createElement_UpdateElement(element, node);
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
-        let fieldInfo = new LayoutParser.FieldInfo(nodeInfo.attribs._hide[0]);
-
-        let fd = this._defineField(repeatInfo, fieldInfo, abFields.VarDefinition);
+        let repeatInfo = new RepeatInfo(elementsStack);
+        let fieldInfo = this._fieldsHelper.def(repeatInfo, nodeInfo.attribs._hide[0],
+                false, abFields.VarDefinition);
     
-        fd.addListener({
-            set: (value, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.hide = value ? true : false;
-            },
-        });
+        /* Default */
+        node.hide = fieldInfo.getValue(this._fields, []) ? true : false;
 
+        /* Field Listeners */
+        for (let fd of fieldInfo.fieldDefinitions) {
+            fd.addListener({
+                change: (value, keys) => {
+                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                            node, keys);
+                    for (let nodeInstance of nodeInstances) {
+                        nodeInstance.hide = fieldInfo.getValue(
+                                this._fields, keys) ? true : false;
+                    }
+                },
+            });
+        }
+
+        /* Virtual */
         if (repeatInfo.virtual) {
             node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
                 /* Virtual Node */
                 if (instanceKeys.length < repeatInfo.repeats.length)
                     return;
 
-                let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
-                nodeInstance.hide = field.$value ? true : false;
+                let value = fieldInfo.getValue(this._fields, instanceKeys);
+
+                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                for (let nodeInstance of nodeInstances)
+                    nodeInstance.hide = value ? true : false;
             });
         }
     }
@@ -168,7 +174,7 @@ class LayoutParser extends abLayouts.Parser
         let node = new abLayouts.LayoutNode();
         this._createElement_UpdateElement(element, node);
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
+        let repeatInfo = new RepeatInfo(elementsStack);
 
         if (repeatInfo.virtual) {
             element.info.holders_OnCreateFn = null;
@@ -231,14 +237,18 @@ class LayoutParser extends abLayouts.Parser
         let fieldName = repeatNameArr[0];
         let itemName = repeatNameArr[1];
 
+        this._fieldsHelper.validateFieldName(fieldName, false);
+        this._fieldsHelper.validateFieldName(itemName, false);
+
         let node = new abNodes.RepeatNode();
         this._createElement_UpdateElement(element, node);
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
-        let fieldInfo = new LayoutParser.FieldInfo(fieldName);
+        let repeatInfo = new RepeatInfo(elementsStack);
+        let fieldInfo = this._fieldsHelper.def(repeatInfo, fieldName,
+                false, abFields.ListDefinition);
 
-        let fd = this._defineField(repeatInfo, fieldInfo, 
-                abFields.ListDefinition);
+        let fd = fieldInfo.fieldDefinitions[0];
+
         element.info.repeat = {
             node: node,
             fieldInfo: fieldInfo,
@@ -267,10 +277,13 @@ class LayoutParser extends abLayouts.Parser
                 if (instanceKeys.length < repeatInfo.repeats.length)
                     return;
 
-                let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+                let field = fieldInfo.getField(this._fields, instanceKeys);
 
-                for (let [ key, value ] of field)
-                    nodeInstance.add(key);
+                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                for (let nodeInstance of nodeInstances) {
+                    for (let [ key, value ] of field)
+                        nodeInstance.add(key);
+                }
             });
         }
 
@@ -282,32 +295,44 @@ class LayoutParser extends abLayouts.Parser
     {
         if (!('_show' in nodeInfo.attribs))
             return;
-        this._validateFieldName(nodeInfo.attribs._show[0], false);
+        this._fieldsHelper.validateProperty(nodeInfo.attribs._show[0], false);
 
         let node = new abNodes.ShowNode();
         this._createElement_UpdateElement(element, node);
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
-        let fieldInfo = new LayoutParser.FieldInfo(nodeInfo.attribs._show[0]);
-
-        let fd = this._defineField(repeatInfo, fieldInfo, abFields.VarDefinition);
+        let repeatInfo = new RepeatInfo(elementsStack);
+        let fieldInfo = this._fieldsHelper.def(repeatInfo, nodeInfo.attribs._show[0],
+                false, abFields.VarDefinition);
     
-        fd.addListener({
-            set: (value, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, node, keys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.show = this._parseBoolean(value);
-            },
-        });
+        /* Default */
+        node.show = fieldInfo.getValue(this._fields, []) ? true : false;
 
+        /* Field Listeners */
+        for (let fd of fieldInfo.fieldDefinitions) {
+            fd.addListener({
+                change: (value, keys) => {
+                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                            node, keys);
+                    for (let nodeInstance of nodeInstances) {
+                        nodeInstance.show = fieldInfo.getValue(
+                                this._fields, keys) ? true : false;
+                    }
+                },
+            });
+        }
+
+        /* Virtual */
         if (repeatInfo.virtual) {
             node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
                 /* Virtual Node */
                 if (instanceKeys.length < repeatInfo.repeats.length)
                     return;
 
-                let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
-                nodeInstance.show = this._parseBoolean(field.$value);
+                let value = fieldInfo.getValue(this._fields, instanceKeys);
+
+                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                for (let nodeInstance of nodeInstances)
+                    nodeInstance.show = value ? true : false;
             });
         }
     }
@@ -317,7 +342,7 @@ class LayoutParser extends abLayouts.Parser
         if (nodeInfo.type === '$')
             return;
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
+        let repeatInfo = new RepeatInfo(elementsStack);
 
         let node = new abNodes.SingleNode(nodeInfo.type);
         this._createElement_UpdateElement(element, node);
@@ -328,37 +353,50 @@ class LayoutParser extends abLayouts.Parser
     _createElement_AddSingle_ParseAttribs(repeatInfo, node, attribs)
     {
         for (let attribName in attribs) {
-            if (attribName[0] === '$')
-                continue;
+            // if (attribName[0] === '$')
+            //     continue;
 
             let attribArr = attribs[attribName];
+            let attribArr_FieldInfos = [];
             for (let attribPart of attribArr) {
-                if (!this._isFieldName(attribPart))
+                if (!this._fieldsHelper.isValidString(attribPart, true)) {
+                    attribArr_FieldInfos.push(null);
                     continue;
+                }
 
-                let fieldInfo = new LayoutParser.FieldInfo(attribPart.substring(1));
+                let fieldInfo = this._fieldsHelper.def(repeatInfo, attribPart,
+                        true, abFields.VarDefinition);
+                attribArr_FieldInfos.push(fieldInfo);
 
-                let fd = this._defineField(repeatInfo, fieldInfo, 
-                        abFields.VarDefinition);
+                for (let fd of fieldInfo.fieldDefinitions) {
+                    fd.addListener({
+                        change: (value, keys) => {
+                            let nodeInstances = this._getNodeInstances(repeatInfo, 
+                                    fieldInfo, node, keys);
+                            for (let nodeInstance of nodeInstances) {
+                                let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                                let attrib = this._createElement_AddSingle_GetAttrib(
+                                        attribArr, attribArr_FieldInfos, instanceKeys);
 
-                fd.addListener({
-                    set: (value, keys) => {
-                        let nodeInstances = this._getNodeInstances(repeatInfo, 
-                                fieldInfo, node, keys);
-                        for (let nodeInstance of nodeInstances) {
-                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
-                            let attrib = this._createElement_AddSingle_GetAttrib(
-                                    attribArr, repeatInfo, instanceKeys);
-
-                            if (attribName in nodeInstance.htmlElement)
-                                nodeInstance.htmlElement[attribName] = attrib;
-                            else
-                                nodeInstance.htmlElement.setAttribute(attribName, attrib);
-                        }
-                    },
-                });
+                                if (attribName in nodeInstance.htmlElement)
+                                    nodeInstance.htmlElement[attribName] = attrib;
+                                else
+                                    nodeInstance.htmlElement.setAttribute(attribName, attrib);
+                            }
+                        },
+                    });
+                }
             }
 
+            /* Default */
+            let attrib = this._createElement_AddSingle_GetAttrib(
+                    attribArr, attribArr_FieldInfos, []);
+            if (attribName in node.htmlElement)
+                node.htmlElement[attribName] = attrib;
+            else
+                node.htmlElement.setAttribute(attribName, attrib);
+
+            /* Virtual */
             if (repeatInfo.virtual) {
                 node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
                     /* Virtual Node */
@@ -366,30 +404,24 @@ class LayoutParser extends abLayouts.Parser
                         return;
 
                     let attrib = this._createElement_AddSingle_GetAttrib(
-                            attribArr, repeatInfo, instanceKeys);
-                    nodeInstance.htmlElement.setAttribute(attribName, attrib);
+                            attribArr, attribArr_FieldInfos, instanceKeys);
+                    if (attribName in nodeInstance.htmlElement)
+                        nodeInstance.htmlElement[attribName] = attrib;
+                    else
+                        nodeInstance.htmlElement.setAttribute(attribName, attrib);
                 });
-            } else {
-                let attrib = '';
-                for (let attribPart of attribArr)
-                    attrib += this._isFieldName(attribPart) ? '' : attribPart;
-                node.htmlElement.setAttribute(attribName, attrib);
             }
         }
     }
 
-    _createElement_AddSingle_GetAttrib(attribArr, repeatInfo, instanceKeys)
+    _createElement_AddSingle_GetAttrib(attribArr, attribArr_FieldInfos, instanceKeys)
     {
         let attrib = '';
-        for (let attribPart of attribArr) {
-            if (this._isFieldName(attribPart)) {
-                let fieldInfo = new LayoutParser.FieldInfo(attribPart.substring(1));
-                let fieldValue = fieldInfo.getField(this._fields, repeatInfo, 
-                        instanceKeys).$value;
-                attrib += typeof fieldValue === 'function' ?
-                        eval(`fieldValue(${fieldInfo.args})`) : fieldValue;
-            } else
-                attrib += attribPart;
+        for (let i = 0; i < attribArr.length; i++) {
+            if (attribArr_FieldInfos[i] !== null) 
+                attrib += attribArr_FieldInfos[i].getValue(this._fields, instanceKeys);
+            else
+                attrib += attribArr[i];
         }
 
         return attrib;
@@ -430,7 +462,7 @@ class LayoutParser extends abLayouts.Parser
 
         let node = element.bottomNode;
 
-        let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
+        let repeatInfo = new RepeatInfo(elementsStack);
 
         if (repeatInfo.virtual) {
             element.info.elems_OnCreateFn = null;
@@ -498,24 +530,23 @@ class LayoutParser extends abLayouts.Parser
     {
         let node = null;
 
-        if (this._isFieldName(nodeContent)) {
-            node = new abNodes.TextNode('');
+        if (this._fieldsHelper.isValidString(nodeContent, true)) {
+            let repeatInfo = new RepeatInfo(elementsStack);
+            let fieldInfo = this._fieldsHelper.def(repeatInfo, nodeContent,
+                    true, abFields.VarDefinition);
+            
+            node = new abNodes.TextNode(fieldInfo.getValue(this._fields, []));
 
-            let repeatInfo = new LayoutParser.RepeatInfo(elementsStack);
-            let fieldInfo = new LayoutParser.FieldInfo(nodeContent.substring(1));
-
-            let fdVar = this._defineField(repeatInfo, fieldInfo, abFields.VarDefinition);
-
-            fdVar.addListener({
-                set: (value, keys) => {
-                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                            node, keys);
-                    for (let nodeInstance of nodeInstances) {
-                        nodeInstance.text = typeof value === 'function' ?
-                                eval(`value(${fieldInfo.args})`) : value;
-                    }
-                },
-            });
+            for (let fd of fieldInfo.fieldDefinitions) {
+                fd.addListener({
+                    change: (value, keys) => {
+                        let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                                node, keys);
+                        for (let nodeInstance of nodeInstances)
+                            nodeInstance.text = fieldInfo.getValue(this._fields, keys);
+                    },
+                });
+            }
 
             if (repeatInfo.virtual) {
                 node.pCopyable.onCreate((nodeInstance, instanceKeys) => {
@@ -523,22 +554,11 @@ class LayoutParser extends abLayouts.Parser
                     if (instanceKeys.length < repeatInfo.repeats.length)
                         return;
 
-                    let field = fieldInfo.getField(this._fields, repeatInfo, instanceKeys);
+                    let value = fieldInfo.getValue(this._fields, instanceKeys);
                     let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
 
-                    for (let nodeInstance of nodeInstances) {
-                        nodeInstance.text = typeof field.$value === 'function' ?
-                            eval(`field.$value(${fieldInfo.args})`) : field.$value;
-                    }
-
-                    // if (field === null)
-                    //     nodeInstance.text = "";
-                    // else {
-                    //     nodeInstance.text = typeof field.$value === 'function' ?
-                    //             eval(`field.$value(${fieldInfo.args})`) : field.$value;
-                    // }
-                    
-
+                    for (let nodeInstance of nodeInstances)
+                        nodeInstance.text = value;
                 });
             }
         } else
@@ -546,101 +566,6 @@ class LayoutParser extends abLayouts.Parser
 
         return node;
     }
-
-    _defineField(repeatInfo, fieldInfo, newFieldDefinitionClass)
-    {
-        let fd = this._fieldDefinitions;
-        let repeatOffset = 0;
-
-        /* Check if is list. */
-        let firstPart = fieldInfo.parts[0];
-        let repeatFound = false;
-        for (let i = repeatInfo.repeats.length - 1; i >= repeatOffset; i--) {
-            if (firstPart !== repeatInfo.repeats[i].itemName)
-                continue;
-            repeatFound = true;
-
-            fd = repeatInfo.repeats[i].fieldDefinition;
-            if (fieldInfo.parts.length === 1)
-                return fd.item(newFieldDefinitionClass);
-            
-            fd = fd.item(abFields.ObjectDefinition);
-        }
-
-        for (let i = repeatFound ? 1 : 0; i < fieldInfo.parts.length - 1; i++) {
-            let part = fieldInfo.parts[i];
-            fd = fd.object(part);
-        }
-
-        let lastPart = fieldInfo.parts[fieldInfo.parts.length - 1];
-
-        // let field = null;
-        // let fieldExists = fd.exists(lastPart);
-
-        // let fieldIsVar = fieldExists ? 
-        //         (fd.get(lastPart) instanceof abFields.VarDefinition ? true : false) : 
-        //         false;
-        // fieldExists = false;
-        // fieldIsVar = false;
-
-        if (newFieldDefinitionClass === abFields.ObjectDefinition)
-            return fd.object(lastPart, false);
-        else if (newFieldDefinitionClass === abFields.ListDefinition)
-            return fd.list(lastPart, false);
-        else if (newFieldDefinitionClass === abFields.VarDefinition) {
-            // if (fieldExists && !fieldIsVar)
-            //     return fd.get(lastPart);
-
-            return fd.var(lastPart);
-        } else
-           throw new Error(`Unknown 'newFieldDefinitionClass'.`);
-    }
-
-    // _getFieldDefs(repeatInfo, fieldInfo)
-    // {
-    //     let fd = this._fieldDefinitions;
-    //     let repeatOffset = 0;
-    //     for (let i = 0; i < fieldInfo.parts.length - 1; i++) {
-    //         let part = fieldInfo.parts[i];
-
-    //         let repeatFound = false;
-    //         for (let j = repeatInfo.repeats.length - 1; j >= repeatOffset; j--) {
-    //             if (part === repeatInfo.repeats[j].itemName) {
-    //                 part = repeatInfo.repeats[j].fieldName;
-    //                 if (fd instanceof abFields.ObjectDefinition)
-    //                     fd = fd.list(part);
-    //                 else if (fd instanceof abFields.ListDefinition)
-    //                     fd = fd.item(abFields.ListDefinition);
-    //                 else
-    //                     js0.assert('Unknown definition type.');
-                    
-    //                 repeatOffset = j;
-    //                 repeatFound = true;
-                    
-    //                 break;
-    //             }
-    //         }
-    //         if (repeatFound)
-    //             continue;
-              
-    //         if (fd instanceof abFields.ObjectDefinition)
-    //             fd = fd.object(part);
-    //         else if (fd instanceof abFields.ListDefinition)
-    //             fd = fd.item(abFields.ObjectDefinition);
-    //         else
-    //             js0.assert('Unknown definition type.');
-
-    //         // let definition = fd.object(part);
-    //         // if (i !== fieldInfo.parts.length - 1) {
-    //         //     if (!(definition instanceof abFields.ObjectDefinition)) {
-    //         //         throw new Error('Field `' + fieldInfo.parts.join('.') + 
-    //         //                 '` type inconsistency.');
-    //         //     }
-    //         // }
-    //     }
-
-    //     return fd;
-    // }
 
     _getNodeInstances(repeatInfo, fieldInfo, node, keys)
     {
@@ -650,42 +575,6 @@ class LayoutParser extends abLayouts.Parser
         let repeatKeys = repeatInfo.getKeys(fieldInfo, keys);
 
         return node.pCopyable.getNodeCopies(repeatKeys);
-
-        // let repeatNode = null;
-        // let keysIndex = 0;
-        // for (let i = 0; i < elementsStack.length; i++) {
-        //     let element = elementsStack[i];
-        //     if ('repeatNode' in element.info) {
-        //         if (repeatNode === null)
-        //             repeatNode = element.info.repeatNode;
-        //         else {
-        //             repeatNode = repeatNode.getInstanceNodeCopies(
-        //                     element.info.repeatNode, keys[i])[0];
-        //             keysIndex++;
-        //         }
-
-        //         if (keysIndex === keys.length - 1) {
-        //             console.log('hm', repeatNode, node);
-        //             console.log('jej', repeatNode.getInstanceNodeCopies(node, 
-        //                     keys[keysIndex]).length);
-        //             return repeatNode.getInstanceNodeCopies(node, keys[keysIndex])[0];
-        //         }
-        //     }
-        // }
-
-        // return null;
-    }
-
-    _isFieldName(fieldName, includesPrefix = true)
-    {
-        if (includesPrefix) {
-            if (fieldName[0] !== '$')
-                return false;
-
-            return fieldName.substring(1).match(this._fieldNameRegexp) !== null;
-        }
-
-        return fieldName.match(this._fieldNameRegexp) !== null;
     }
 
     _isVirtual(elementsStack)
@@ -698,25 +587,11 @@ class LayoutParser extends abLayouts.Parser
         return false;
     }
 
-    _parseBoolean(value)
-    {
-        if (typeof value === 'Array')
-            return value.length > 0;
-
-        return value ? true : false;
-    }
-
-    _validateFieldName(fieldName, includesPrefix = true)
-    {
-        if (!this._isFieldName(fieldName, includesPrefix))
-            throw new Error(`'${fieldName}' is not a valid field name.`);
-    }
-
 
     /* abLayouts.Parser Overrides */
     __afterParse()
     {
-        this._fields = this._fieldDefinitions.create();
+        this._fields = this._fieldsHelper._fieldDefinitions.create();
     }
     
     __createElement(nodeInfo, elementsStack)
@@ -729,233 +604,3 @@ class LayoutParser extends abLayouts.Parser
     /* abLayouts.Parser Overrides */
 
 }
-module.exports = LayoutParser;
-
-
-Object.defineProperties(LayoutParser, {
-
-    Elems: { value:
-    class LayoutParser_Elems {
-
-        constructor()
-        {
-            this._elemInfos = {};
-        }
-        
-        $exists(elemName)
-        {
-            js0.args(arguments, 'string');
-
-            return elemName in this._elemInfos; 
-        }
-
-        $get(elemName, keys)
-        {
-            js0.args(arguments, 'string', Array);
-
-            if (!(elemName in this._elemInfos))
-                throw new Error(`Elem '${elemName}' does not exist.`);
-
-            return this._get(elemName, keys);
-        }
-
-        $keys(elemName)
-        {
-            js0.args(arguments, 'string');
-
-            if (!this.$exists(elemName))
-                throw new Error(`Elem '${elemName}' does not exist.`);
-
-            let keys = [];
-            for (let elemInfo of this._elemInfos[elemName]) {
-                let keysArr = [];
-                for (let key of elemInfo.keys)
-                    keysArr.push(key);
-                keys.push(keysArr);
-            }
-
-            return keys;
-        }
-
-        _add(elemName, keys, elem)
-        {
-            this._elemInfos[elemName].push({
-                elem: elem,
-                keys: keys,
-            });
-        }
-
-        _declare(elemName)
-        {
-            this._elemInfos[elemName] = [];
-        }
-
-        _get(elemName, keys)
-        {
-            for (let elemInfo of this._elemInfos[elemName]) {
-                if (this._keysMatch(elemInfo.keys, keys))
-                    return elemInfo.elem;
-            }
-
-            throw new Error(`Elem '${elemName}' with keys '` + keys.join(', ') +
-                    `' does not exist.`);
-        }
-
-        _keysMatch(keysA, keysB)
-        {
-            if (keysA.length !== keysB.length)
-                return false;
-
-            for (let i = 0; i < keysA.length; i++) {
-                if (keysA[i] !== keysB[i])
-                    return false;
-            }
-
-            return true;
-        }
-
-        _remove(elemName, keys)
-        {
-            if (!this.$exists(elemName))
-                throw new Error(`Elem '${elemName}' does not exist.`);
-
-            for (let i = 0; i < this._elemInfos[elemName].length; i++) {
-                if (this._keysMatch(this._elemInfos[elemName][i].keys, keys)) {
-                    this._elemInfos[elemName].splice(i, 1);
-                    return;
-                }
-            }
-
-            let keysStr = keys.join(', ');
-            throw new Error(`Elem '${elemName}' with keys '${keysStr}' does not exist.`);
-        }
-
-    }},
-
-    FieldInfo: { value:
-    class LayoutParser_FieldInfo {
-
-        constructor(fieldPath)
-        {
-            let regexp = /^([a-zA-Z][a-zA-Z0-9._]*)(\((.*)\))?$/;
-            let match = regexp.exec(fieldPath);
-
-            // console.log(fieldPath, match);
-            this.fieldPath = match[1];
-            this.args = typeof match[3] === 'undefined' ? null : match[3];
-            this.parts = this.fieldPath.split('.');
-            this.name = this.parts[this.parts.length - 1];
-        }
-
-        getField(fields, repeatInfo, keys)
-        {
-            let rawParts = this.getRawParts(repeatInfo);
-            // keys = repeatInfo.getKeys(this, keys);
-
-            let keysOffset = 0;
-            let field = fields;
-            let fieldPath = '';
-            let repeatsOffset = 0;
-            for (let part of rawParts) {
-                if (field instanceof abFields.ObjectField) {
-                    field = field.$get(part);
-                    fieldPath += (fieldPath !== '' ? '.' : '') + part;
-                }
-
-                while (field instanceof abFields.ListField) {
-                    let repeatFound = false;
-                    for (let i = repeatsOffset; i < repeatInfo.repeats.length; i++) {
-                        if (fieldPath === repeatInfo.repeats[i].fieldInfo.getFullPath(repeatInfo)) {
-                            if (keys[i] === null || typeof keys[i] === 'undefined')
-                                throw new Error('Instance keys to lists inconsistency.');
-
-                            field = field.$get(keys[repeatsOffset]);
-                            repeatsOffset = i + 1;
-                            repeatFound = true;
-                            break;
-                        }
-                    }
-
-                    if (!repeatFound)
-                        break;
-                        // throw new Error('Instance keys to lists inconsistency.');
-                }
-            }
-
-            return field;
-        }
-
-        getFullPath(repeatInfo)
-        {
-            let rawParts = this.getRawParts(repeatInfo);
-            return rawParts.join('.');
-        }
-
-        getRawParts(repeatInfo)
-        {
-            let rawParts = this.parts.slice();
-
-            /* Get all raw parts. */
-            for (let i = repeatInfo.repeats.length - 1; i >= 0; i--) {
-                if (rawParts[0] !== repeatInfo.repeats[i].itemName)
-                    continue;
-
-                rawParts.splice(0, 1);
-                rawParts = repeatInfo.repeats[i].fieldInfo.parts.concat(rawParts);
-                // rawParts.splice(0, 0, repeatInfo.repeats[i].fieldInfo.parts);
-            }
-
-            return rawParts;
-        }
-
-    }},
-
-
-    RepeatInfo: { value:
-    class LayoutParser_RepeatInfo {
-
-        constructor(elementsStack)
-        {
-            this.repeats = [];
-            this.virtual = false;
-
-            for (let i = 0; i < elementsStack.length; i++) {
-                let element = elementsStack[i];
-    
-                if ('repeat' in element.info) {
-                    this.repeats.push(element.info.repeat);
-                    this.virtual = true;
-                }
-            }
-        }
-
-        getKeys(fieldInfo, keys)
-        {
-            let repeatKeys = [];
-            for (let i = 0; i < this.repeats.length; i++)
-                repeatKeys.push(null);
-
-            let rawFieldParts = fieldInfo.getRawParts(this);
-            let fullFieldPath = rawFieldParts.join('.');
-            let keysIndex = keys.length - 1;
-            
-            for (let i = this.repeats.length - 1; i >= 0; i--) {
-                let repeatFieldPath = this.repeats[i].fieldInfo
-                        .getFullPath(this);
-                if (fullFieldPath.indexOf(repeatFieldPath) === 0) {
-                    repeatKeys[i] = keys[keysIndex];
-                    keysIndex--;
-                    if (keysIndex < 0)
-                        break;
-                    // fullFieldPath = fullFieldPath.substring(repeatFieldPath.length);
-                    // if (fullFieldPath[0] === '.')
-                    //     fullFieldPath = fullFieldPath.substring(1);
-                }
-            }
-            
-            return repeatKeys;
-        }
-
-    }},
-
-});
