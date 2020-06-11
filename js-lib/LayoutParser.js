@@ -542,6 +542,7 @@ export default class LayoutParser extends abLayouts.Parser
                     change: (value, keys) => {
                         let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
                                 node, keys);
+
                         for (let nodeInstance of nodeInstances)
                             nodeInstance.text = fieldInfo.getValue(this._fields, keys);
                     },
@@ -572,9 +573,36 @@ export default class LayoutParser extends abLayouts.Parser
         if (repeatInfo.repeats.length === 0)
             return [ node ];
 
-        let repeatKeys = repeatInfo.getKeys(fieldInfo, keys);
+        let fieldInfos_Requested = [];
+        let nodeCopies = [];
 
-        return node.pCopyable.getNodeCopies(repeatKeys);
+        /* Main Field */
+        if (fieldInfo.type === FieldInfo.Types.Field || 
+                fieldInfo.type === FieldInfo.Types.Function)
+            fieldInfos_Requested.push(fieldInfo);
+        
+        /* Arg Fields */
+        if (fieldInfo.type === FieldInfo.Types.Function) {
+            for (let argField of fieldInfo.fieldFn_ArgFields)
+                fieldInfos_Requested.push(argField.fieldInfo);
+        }
+
+        if (fieldInfo.type === FieldInfo.Types.Expression) {
+            for (let argField of fieldInfo.expr_ArgFields)
+                fieldInfos_Requested.push(argField.fieldInfo);
+        }
+
+        /* Node Copies */
+        for (let fieldInfo_Requested of fieldInfos_Requested) {
+            let repeatKeys = repeatInfo.getKeys(fieldInfo_Requested, keys);
+            let nodeCopies_T = node.pCopyable.getNodeCopies(repeatKeys);
+            for (let nodeCopy_T of nodeCopies_T) {
+                if (!nodeCopies.includes(nodeCopy_T))
+                    nodeCopies.push(nodeCopy_T);
+            }
+        }
+
+        return nodeCopies;
     }
 
     _isVirtual(elementsStack)

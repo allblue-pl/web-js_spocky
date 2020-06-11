@@ -68,20 +68,22 @@ export default class FieldInfo
                 this.type = Types.Function;
 
                 this.fieldFn_ArgFields = [];
-                this.fieldFn_ArgFieldsStr = fieldMatch[3];
-                let re = new RegExp('\\$' + this.fieldsHelper.regexpStrs_FieldName, 'g');
-                let matches = this.fieldFn_ArgFieldsStr.matchAll(re);
-                for (let match of matches) {
-                    let fieldFn_ArgFieldInfo = this.fieldsHelper.def(repeatInfo, match[1], 
-                            false, abFields.VarDefinition);
-    
-                    this.fieldFn_ArgFields.push({
-                        path: match[1],
-                        fieldInfo: fieldFn_ArgFieldInfo,
-                    });
+                this.fieldFn_ArgStrs = fieldMatch[3].split(',');
+                for (let argStr of this.fieldFn_ArgStrs) {
+                    let re = new RegExp('\\$' + this.fieldsHelper.regexpStrs_FieldName, 'g');
+                    let matches = argStr.matchAll(re);
+                    for (let match of matches) {
+                        let fieldFn_ArgFieldInfo = this.fieldsHelper.def(repeatInfo, match[1], 
+                                false, abFields.VarDefinition);
+        
+                        this.fieldFn_ArgFields.push({
+                            path: match[1],
+                            fieldInfo: fieldFn_ArgFieldInfo,
+                        });
 
-                    for (let fieldFn_ArgFieldInfo_FD of fieldFn_ArgFieldInfo.fieldDefinitions)
-                        this.fieldDefinitions.push(fieldFn_ArgFieldInfo_FD);
+                        for (let fieldFn_ArgFieldInfo_FD of fieldFn_ArgFieldInfo.fieldDefinitions)
+                            this.fieldDefinitions.push(fieldFn_ArgFieldInfo_FD);
+                    }
                 }
             }
 
@@ -92,15 +94,15 @@ export default class FieldInfo
             throw new Error(`Unknown 'FieldInfo' type of: ` + fieldPath);
     }
 
-    getEval(evalStr, argFields, fields, keys)
+    getEval($evalStr, $argFields, $fields, $keys)
     {
-        return eval(evalStr);
+        return eval($evalStr);
     }
 
     getEvalStr(evalStr, argFields, fields, keys)
     {
         for (let argIndex = 0; argIndex < argFields.length; argIndex++) {
-            let value = `argFields[${argIndex}].fieldInfo.getValue(fields, keys)`;
+            let value = `$argFields[${argIndex}].fieldInfo.getValue($fields, $keys)`;
             evalStr = evalStr.replace(new RegExp('\\$' + argFields[argIndex].path + '([^a-zA-Z0-9]|$)', 'g'), 
                     value + '$1');
         }
@@ -122,17 +124,31 @@ export default class FieldInfo
                 return undefined;
                 
             let fnVal = field.$value;
-            let evalStr_Original = `(${fnVal})(${this.fieldFn_ArgFieldsStr})`;
-            let evalStr = this.getEvalStr(this.fieldFn_ArgFieldsStr,
-                    this.fieldFn_ArgFields, fields, keys);
-            evalStr = `(${fnVal})(${evalStr})`;
+            let argsArr = [];
+            for (let argStr of this.fieldFn_ArgStrs) {
+                let evalStr = this.getEvalStr(argStr, this.fieldFn_ArgFields, 
+                        fields, keys);
+                try {
+                    argsArr.push(this.getEval(evalStr));
+                } catch (err) {
+                    throw new Error(`Error evaluating function '$${this.path}:${evalStr_Original}': ` +  
+                            err);
+                }            
+                
+            }
 
-            try {
-                return this.getEval(evalStr);
-            } catch (err) {
-                throw new Error(`Error evaluating function '$${this.path}:${evalStr_Original}': ` +  
-                        err);
-            }    
+            return fnVal.apply(null, argsArr);
+            // let evalStr_Original = `(${fnVal})(${this.fieldFn_ArgFieldsStr})`;
+            // let evalStr = this.getEvalStr(this.fieldFn_ArgFieldsStr,
+            //         this.fieldFn_ArgFields, fields, keys);
+            // evalStr = `(${fnVal})(${evalStr})`;
+
+            // try {
+            //     return this.getEval(evalStr);
+            // } catch (err) {
+            //     throw new Error(`Error evaluating function '$${this.path}:${evalStr_Original}': ` +  
+            //             err);
+            // }    
         } else if (this.type === Types.Expression) {
             let evalStr = this.getEvalStr(this.expr, this.expr_ArgFields, fields, keys);
             

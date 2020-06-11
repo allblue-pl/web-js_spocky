@@ -1,7 +1,9 @@
 'use strict';
 
 const
-    js0 = require('js0')
+    js0 = require('js0'),
+
+    FieldInfo = require('./LayoutParser.FieldInfo')
 ;
 
 export default class RepeatInfo
