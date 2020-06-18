@@ -20,8 +20,8 @@ export default class FieldsHelper
         this._fieldDefinitions = abFields.define();
         this._fieldInfos = [];
 
-        this.regexpStrs_Expression = '\\?\\((.+)\\)';
-        this.regexpStrs_FieldName = '([a-zA-Z][a-zA-Z0-9._]*)+?(\\((.*)\\))?';
+        this.regexpStrs_Expression = '\\?\\(((.|\\s|\\S)+)\\)';
+        this.regexpStrs_FieldName = '([a-zA-Z][a-zA-Z0-9._]*)+?(\\((.*?)\\))?';
     }
 
     def(repeatInfo, fieldPath, includesPrefix, requiredFieldDefinitionClass)
@@ -88,7 +88,9 @@ export default class FieldsHelper
     {
         js0.args(arguments, 'string', [ 'boolean', js0.Default ]);
 
-        return str.match(new RegExp('^' + this.regexpStrs_Expression + '$')) !== null;
+        console.log(str, 'Test');
+
+        return str.match(new RegExp('^' + this.regexpStrs_Expression + '$', 'm')) !== null;
     }
 
     isValidString(str, includesPrefix)
@@ -139,7 +141,7 @@ export default class FieldsHelper
         let repeatOffset = 0;
 
         /* Check if is list. */
-        let firstPart = fieldInfo.parts[0];
+        let firstPart = fieldInfo.field_Parts[0];
         let repeatFound = false;
         for (let i = repeatInfo.repeats.length - 1; i >= repeatOffset; i--) {
             if (firstPart !== repeatInfo.repeats[i].itemName)
@@ -147,18 +149,18 @@ export default class FieldsHelper
             repeatFound = true;
 
             fd = repeatInfo.repeats[i].fieldDefinition;
-            if (fieldInfo.parts.length === 1)
+            if (fieldInfo.field_Parts.length === 1)
                 return fd.item(newFieldDefinitionClass);
             
             fd = fd.item(abFields.ObjectDefinition);
         }
 
-        for (let i = repeatFound ? 1 : 0; i < fieldInfo.parts.length - 1; i++) {
-            let part = fieldInfo.parts[i];
+        for (let i = repeatFound ? 1 : 0; i < fieldInfo.field_Parts.length - 1; i++) {
+            let part = fieldInfo.field_Parts[i];
             fd = fd.object(part);
         }
 
-        let lastPart = fieldInfo.parts[fieldInfo.parts.length - 1];
+        let lastPart = fieldInfo.field_Parts[fieldInfo.field_Parts.length - 1];
 
         // let field = null;
         // let fieldExists = fd.exists(lastPart);

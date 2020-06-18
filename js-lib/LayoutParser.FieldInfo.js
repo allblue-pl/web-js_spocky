@@ -2,6 +2,7 @@
 
 const
     abFields = require('ab-fields'),
+    abStrings = require('ab-strings'),
     js0 = require('js0')
 ;
 
@@ -43,7 +44,7 @@ export default class FieldInfo
 
             this.expr = fieldPath.substr(2, fieldPath.length - 3);
             this.expr_ArgFields = [];
-            let re = new RegExp('\\$' + this.fieldsHelper.regexpStrs_FieldName, 'g');
+            let re = new RegExp('\\$(' + this.fieldsHelper.regexpStrs_FieldName + ')', 'gi');
             let matches = this.expr.matchAll(re);
             for (let match of matches) {
                 let expr_ArgFieldInfo = this.fieldsHelper.def(repeatInfo, match[1], 
@@ -87,9 +88,9 @@ export default class FieldInfo
                 }
             }
 
-            this.path = fieldMatch[1];
-            this.parts = this.path.split('.');
-            this.name = this.parts[this.parts.length - 1];
+            this.field_Parts = fieldMatch[1];
+            this.field_Parts = this.field_Parts.split('.');
+            this.field_Name = this.field_Parts[this.field_Parts.length - 1];
         } else
             throw new Error(`Unknown 'FieldInfo' type of: ` + fieldPath);
     }
@@ -103,8 +104,9 @@ export default class FieldInfo
     {
         for (let argIndex = 0; argIndex < argFields.length; argIndex++) {
             let value = `$argFields[${argIndex}].fieldInfo.getValue($fields, $keys)`;
-            evalStr = evalStr.replace(new RegExp('\\$' + argFields[argIndex].path + '([^a-zA-Z0-9]|$)', 'g'), 
-                    value + '$1');
+            evalStr = evalStr.replace(new RegExp('\\$' + 
+                    abStrings.escapeRegExpChars(argFields[argIndex].path) + 
+                    '([^a-zA-Z0-9]|$)', 'g'), value + '$1');
         }
 
         return evalStr.replace(/([^a-zA-Z0-9]|^)this([^a-zA-Z0-9]|$)/g, '$1undefined$2');
@@ -131,7 +133,7 @@ export default class FieldInfo
                 try {
                     argsArr.push(this.getEval(evalStr));
                 } catch (err) {
-                    throw new Error(`Error evaluating function '$${this.path}:${evalStr_Original}': ` +  
+                    throw new Error(`Error evaluating function '$${this.field_Parts}:${evalStr_Original}': ` +  
                             err);
                 }            
                 
@@ -146,12 +148,12 @@ export default class FieldInfo
             // try {
             //     return this.getEval(evalStr);
             // } catch (err) {
-            //     throw new Error(`Error evaluating function '$${this.path}:${evalStr_Original}': ` +  
+            //     throw new Error(`Error evaluating function '$${this.field_Parts}:${evalStr_Original}': ` +  
             //             err);
             // }    
         } else if (this.type === Types.Expression) {
             let evalStr = this.getEvalStr(this.expr, this.expr_ArgFields, fields, keys);
-            
+
             try {
                 return this.getEval(evalStr, this.expr_ArgFields, fields, keys);
             } catch (err) {
@@ -210,7 +212,7 @@ export default class FieldInfo
 
     getRawParts(repeatInfo)
     {
-        let rawParts = this.parts.slice();
+        let rawParts = this.field_Parts.slice();
 
         /* Get all raw parts. */
         for (let i = repeatInfo.repeats.length - 1; i >= 0; i--) {
@@ -218,7 +220,8 @@ export default class FieldInfo
                 continue;
 
             rawParts.splice(0, 1);
-            rawParts = repeatInfo.repeats[i].fieldInfo.parts.concat(rawParts);
+            console.log(repeatInfo.repeats[i].fieldInfo);
+            rawParts = repeatInfo.repeats[i].fieldInfo.field_Parts.concat(rawParts);
             // rawParts.splice(0, 0, repeatInfo.repeats[i].fieldInfo.parts);
         }
 

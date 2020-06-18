@@ -124,7 +124,7 @@ export default class LayoutParser extends abLayouts.Parser
     {
         if (!('_hide' in nodeInfo.attribs))
             return;
-        this._fieldsHelper.validateFieldName(nodeInfo.attribs._hide[0], false);
+            this._fieldsHelper.validateProperty(nodeInfo.attribs._hide[0], false);
 
         let node = new abNodes.HideNode();
         this._createElement_UpdateElement(element, node);
