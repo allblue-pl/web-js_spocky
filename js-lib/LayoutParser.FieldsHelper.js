@@ -88,8 +88,6 @@ export default class FieldsHelper
     {
         js0.args(arguments, 'string', [ 'boolean', js0.Default ]);
 
-        console.log(str, 'Test');
-
         return str.match(new RegExp('^' + this.regexpStrs_Expression + '$', 'm')) !== null;
     }
 

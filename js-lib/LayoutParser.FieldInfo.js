@@ -220,7 +220,6 @@ export default class FieldInfo
                 continue;
 
             rawParts.splice(0, 1);
-            console.log(repeatInfo.repeats[i].fieldInfo);
             rawParts = repeatInfo.repeats[i].fieldInfo.field_Parts.concat(rawParts);
             // rawParts.splice(0, 0, repeatInfo.repeats[i].fieldInfo.parts);
         }
