@@ -126,14 +126,18 @@ export default class FieldInfo
                 return undefined;
                 
             let fnVal = field.$value;
+            if (fnVal === null || typeof fnVal === 'undefined')
+                return undefined;
+
             let argsArr = [];
             for (let argStr of this.fieldFn_ArgStrs) {
+                // console.log(new Error());
                 let evalStr = this.getEvalStr(argStr, this.fieldFn_ArgFields, 
                         fields, keys);
                 try {
-                    argsArr.push(this.getEval(evalStr));
+                    argsArr.push(this.getEval(evalStr, this.fieldFn_ArgFields, fields, keys));
                 } catch (err) {
-                    throw new Error(`Error evaluating function '$${this.field_Parts}:${evalStr_Original}': ` +  
+                    throw new Error(`Error evaluating function '$${this.field_Parts}(${argStr})` +  
                             err);
                 }            
                 
@@ -168,7 +172,7 @@ export default class FieldInfo
         js0.args(arguments, [ abFields.ObjectField, js0.Null], Array);
 
         let rawParts = this.getRawParts(this.repeatInfo);
-        // keys = repeatInfo.getKeys(this, keys);
+        // keys = this.repeatInfo.getKeys(this, keys);
 
         let keysOffset = 0;
         let field = fields;

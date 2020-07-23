@@ -20,7 +20,7 @@ export default class FieldsHelper
         this._fieldDefinitions = abFields.define();
         this._fieldInfos = [];
 
-        this.regexpStrs_Expression = '\\?\\(((.|\\s|\\S)+)\\)';
+        this.regexpStrs_Expression = '\\?\\(((\\s|\\S)+)\\)';
         this.regexpStrs_FieldName = '([a-zA-Z][a-zA-Z0-9._]*)+?(\\((.*?)\\))?';
     }
 

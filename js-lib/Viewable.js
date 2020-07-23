@@ -35,24 +35,28 @@ class Viewable
     {
         js0.args(arguments, abNodes.Node);
 
-        if (!js0.type(parentNode, js0.Prop(abNodes.Node.PChildren)))
-            throw new Error(`'parentNode' does not have 'PChildren' property.`);
+        // setTimeout(() => {
+            if (!js0.type(parentNode, js0.Prop(abNodes.Node.PChildren)))
+                throw new Error(`'parentNode' does not have 'PChildren' property.`);
 
-        if (this._parentNode !== null)
-            this.deactivate();
+            if (this._parentNode !== null)
+                this.deactivate();
 
-        this._parentNode = parentNode;
-        this.__activate(this._parentNode);
+            this._parentNode = parentNode;
+            this.__activate(this._parentNode);
+        // }, 10);
 
         this._active = true;
     }
 
     deactivate()
     {
-        if (this._parentNode !== null) {
-            this.__deactivate(this._parentNode);
-            this._parentNode = null;
-        }
+        // setTimeout(() => {
+            if (this._parentNode !== null) {
+                this.__deactivate(this._parentNode);
+                this._parentNode = null;
+            }
+        // }, 10);
 
         this._active = false;
     }

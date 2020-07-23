@@ -94,12 +94,15 @@ export default class LayoutParser extends abLayouts.Parser
         for (let fd of fieldInfo.fieldDefinitions) {
             fd.addListener({
                 change: (value, keys) => {
-                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                        node, keys);
-                    for (let nodeInstance of nodeInstances) {
-                        nodeInstance.htmlElement.innerHTML = fieldInfo.getValue(
-                                this._fields, keys);
-                    }
+                    this._runOnUIThread(() => {
+                        let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                            node, keys);
+                        for (let nodeInstance of nodeInstances) {
+                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                            nodeInstance.htmlElement.innerHTML = fieldInfo.getValue(
+                                    this._fields, instanceKeys);
+                        }
+                    });
                 },
             });
         }
@@ -113,9 +116,11 @@ export default class LayoutParser extends abLayouts.Parser
 
                 let value = fieldInfo.getValue(this._fields, instanceKeys);
 
-                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.htmlElement.innerHTML = value;
+                this._runOnUIThread(() => {
+                    let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                    for (let nodeInstance of nodeInstances)
+                        nodeInstance.htmlElement.innerHTML = value;
+                });
             });
         }
     }
@@ -140,12 +145,16 @@ export default class LayoutParser extends abLayouts.Parser
         for (let fd of fieldInfo.fieldDefinitions) {
             fd.addListener({
                 change: (value, keys) => {
-                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                            node, keys);
-                    for (let nodeInstance of nodeInstances) {
-                        nodeInstance.hide = fieldInfo.getValue(
-                                this._fields, keys) ? true : false;
-                    }
+                    this._runOnUIThread(() => {
+                        let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                                node, keys);
+                        for (let nodeInstance of nodeInstances) {
+                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                            nodeInstance.hide = fieldInfo.getValue(
+                                    this._fields, instanceKeys) ? 
+                                    true : false;
+                        }
+                    });
                 },
             });
         }
@@ -159,9 +168,11 @@ export default class LayoutParser extends abLayouts.Parser
 
                 let value = fieldInfo.getValue(this._fields, instanceKeys);
 
-                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.hide = value ? true : false;
+                this._runOnUIThread(() => {
+                    let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                    for (let nodeInstance of nodeInstances)
+                        nodeInstance.hide = value ? true : false;
+                });
             });
         }
     }
@@ -209,11 +220,13 @@ export default class LayoutParser extends abLayouts.Parser
                     return (onCreateFn) => {
                         element.info.holders_OnCreateFn = onCreateFn;
 
-                        let nodeInstances = node.pCopyable.getNodeCopies();
-                        for (let nodeInstance of nodeInstances) {
-                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
-                            onCreateFn(new Holder(nodeInstance), instanceKeys);
-                        }
+                        this._runOnUIThread(() => {
+                            let nodeInstances = node.pCopyable.getNodeCopies();
+                            for (let nodeInstance of nodeInstances) {
+                                let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                                onCreateFn(new Holder(nodeInstance), instanceKeys);
+                            }
+                        });
                     };
                 }
             });
@@ -258,16 +271,20 @@ export default class LayoutParser extends abLayouts.Parser
         
         fd.addListener({
             add: (index, key, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                        node, keys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.addAt(index, key);
+                this._runOnUIThread(() => {
+                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                            node, keys);
+                    for (let nodeInstance of nodeInstances)
+                        nodeInstance.addAt(index, key);
+                });
             },
             delete: (key, keys) => {
-                let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                        node, keys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.delete(key);
+                this._runOnUIThread(() => {
+                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                            node, keys);
+                    for (let nodeInstance of nodeInstances)
+                        nodeInstance.delete(key);
+                });
             },
         });
 
@@ -279,11 +296,13 @@ export default class LayoutParser extends abLayouts.Parser
 
                 let field = fieldInfo.getField(this._fields, instanceKeys);
 
-                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
-                for (let nodeInstance of nodeInstances) {
-                    for (let [ key, value ] of field)
-                        nodeInstance.add(key);
-                }
+                this._runOnUIThread(() => {
+                    let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                    for (let nodeInstance of nodeInstances) {
+                        for (let [ key, value ] of field)
+                            nodeInstance.add(key);
+                    }
+                });
             });
         }
 
@@ -311,12 +330,14 @@ export default class LayoutParser extends abLayouts.Parser
         for (let fd of fieldInfo.fieldDefinitions) {
             fd.addListener({
                 change: (value, keys) => {
-                    let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                            node, keys);
-                    for (let nodeInstance of nodeInstances) {
-                        nodeInstance.show = fieldInfo.getValue(
-                                this._fields, keys) ? true : false;
-                    }
+                    this._runOnUIThread(() => {
+                        let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                                node, keys);
+                        for (let nodeInstance of nodeInstances) {
+                            nodeInstance.show = fieldInfo.getValue(
+                                    this._fields, keys) ? true : false;
+                        }
+                    });
                 },
             });
         }
@@ -330,9 +351,11 @@ export default class LayoutParser extends abLayouts.Parser
 
                 let value = fieldInfo.getValue(this._fields, instanceKeys);
 
-                let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
-                for (let nodeInstance of nodeInstances)
-                    nodeInstance.show = value ? true : false;
+                this._runOnUIThread(() => {
+                    let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                    for (let nodeInstance of nodeInstances)
+                        nodeInstance.show = value ? true : false;
+                });
             });
         }
     }
@@ -371,18 +394,20 @@ export default class LayoutParser extends abLayouts.Parser
                 for (let fd of fieldInfo.fieldDefinitions) {
                     fd.addListener({
                         change: (value, keys) => {
-                            let nodeInstances = this._getNodeInstances(repeatInfo, 
-                                    fieldInfo, node, keys);
-                            for (let nodeInstance of nodeInstances) {
-                                let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
-                                let attrib = this._createElement_AddSingle_GetAttrib(
-                                        attribArr, attribArr_FieldInfos, instanceKeys);
+                            this._runOnUIThread(() => {
+                                let nodeInstances = this._getNodeInstances(repeatInfo, 
+                                        fieldInfo, node, keys);
+                                for (let nodeInstance of nodeInstances) {
+                                    let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                                    let attrib = this._createElement_AddSingle_GetAttrib(
+                                            attribArr, attribArr_FieldInfos, instanceKeys);
 
-                                if (attribName in nodeInstance.htmlElement)
-                                    nodeInstance.htmlElement[attribName] = attrib;
-                                else
-                                    nodeInstance.htmlElement.setAttribute(attribName, attrib);
-                            }
+                                    if (attribName in nodeInstance.htmlElement)
+                                        nodeInstance.htmlElement[attribName] = attrib;
+                                    else
+                                        nodeInstance.htmlElement.setAttribute(attribName, attrib);
+                                }
+                            });
                         },
                     });
                 }
@@ -471,7 +496,7 @@ export default class LayoutParser extends abLayouts.Parser
             this._elems._declare(elemName);
             node.pCopyable.onCreate((node) => {
                 let keys = node.pCopyable.getInstanceKeys();
-                
+
                 /* Virtual Node */
                 if (keys.length < repeatInfo.repeats.length)
                     return;
@@ -497,11 +522,13 @@ export default class LayoutParser extends abLayouts.Parser
                     return (onCreateFn) => {
                         element.info.elems_OnCreateFn = onCreateFn;
                         
-                        let nodeInstances = node.pCopyable.getNodeCopies();
-                        for (let nodeInstance of nodeInstances) {
-                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
-                            onCreateFn(nodeInstance.htmlElement, instanceKeys);
-                        }
+                        this._runOnUIThread(() => {
+                            let nodeInstances = node.pCopyable.getNodeCopies();
+                            for (let nodeInstance of nodeInstances) {
+                                let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
+                                onCreateFn(nodeInstance.htmlElement, instanceKeys);
+                            }
+                        });
                     };
                 }
             });
@@ -540,11 +567,15 @@ export default class LayoutParser extends abLayouts.Parser
             for (let fd of fieldInfo.fieldDefinitions) {
                 fd.addListener({
                     change: (value, keys) => {
-                        let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                                node, keys);
+                        this._runOnUIThread(() => {
+                            let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
+                                    node, keys);
 
-                        for (let nodeInstance of nodeInstances)
-                            nodeInstance.text = fieldInfo.getValue(this._fields, keys);
+                            for (let nodeInstance of nodeInstances) {
+                                nodeInstance.text = fieldInfo.getValue(this._fields, 
+                                        nodeInstance.pCopyable.getInstanceKeys());
+                            }
+                        });
                     },
                 });
             }
@@ -556,10 +587,12 @@ export default class LayoutParser extends abLayouts.Parser
                         return;
 
                     let value = fieldInfo.getValue(this._fields, instanceKeys);
-                    let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
 
-                    for (let nodeInstance of nodeInstances)
-                        nodeInstance.text = value;
+                    this._runOnUIThread(() => {
+                        let nodeInstances = node.pCopyable.getNodeCopies(instanceKeys);
+                        for (let nodeInstance of nodeInstances)
+                            nodeInstance.text = value;
+                    });
                 });
             }
         } else
@@ -574,7 +607,6 @@ export default class LayoutParser extends abLayouts.Parser
             return [ node ];
 
         let fieldInfos_Requested = [];
-        let nodeCopies = [];
 
         /* Main Field */
         if (fieldInfo.type === FieldInfo.Types.Field || 
@@ -593,13 +625,25 @@ export default class LayoutParser extends abLayouts.Parser
         }
 
         /* Node Copies */
-        for (let fieldInfo_Requested of fieldInfos_Requested) {
-            let repeatKeys = repeatInfo.getKeys(fieldInfo_Requested, keys);
-            let nodeCopies_T = node.pCopyable.getNodeCopies(repeatKeys);
-            for (let nodeCopy_T of nodeCopies_T) {
-                if (!nodeCopies.includes(nodeCopy_T))
-                    nodeCopies.push(nodeCopy_T);
-            }
+        // console.log('###', fieldInfos_Requested);
+        // let nodeCopies = [];
+        // for (let fieldInfo_Requested of fieldInfos_Requested) {
+        //     let repeatKeys = repeatInfo.getKeys(fieldInfo_Requested, keys);
+        //     console.log('Here', repeatKeys);
+        //     let nodeCopies_T = node.pCopyable.getNodeCopies(repeatKeys);
+        //     console.log(nodeCopies_T);
+        //     for (let nodeCopy_T of nodeCopies_T) {
+        //         if (!nodeCopies.includes(nodeCopy_T))
+        //             nodeCopies.push(nodeCopy_T);
+        //     }
+        // }
+
+        let nodeCopies = [];
+        let repeatKeys = repeatInfo.getKeys(fieldInfos_Requested, keys);
+        let nodeCopies_T = node.pCopyable.getNodeCopies(repeatKeys);
+        for (let nodeCopy_T of nodeCopies_T) {
+            if (!nodeCopies.includes(nodeCopy_T))
+                nodeCopies.push(nodeCopy_T);
         }
 
         return nodeCopies;
@@ -613,6 +657,12 @@ export default class LayoutParser extends abLayouts.Parser
         }
 
         return false;
+    }
+
+    _runOnUIThread(fn)
+    {
+        fn();
+        // setTimeout(fn, 10);
     }
 
 
