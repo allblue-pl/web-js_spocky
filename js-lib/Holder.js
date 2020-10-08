@@ -11,6 +11,12 @@ const
 class Holder
 {
 
+    get $view() {
+        if (this._view === null)
+            return null;
+        
+        return this._view;
+    }
     set $view(value) {
         if (!js0.type(value, [ require('./Layout'), require('./Module'), js0.Null ]))
             throw new Error(`'$view' must be 'Layout', 'Module' or 'Null'.`);

@@ -138,6 +138,8 @@ class Layout
 
     $onDisplay(listener)
     {
+        if (this._$viewable.active)
+            listener();
         this._$listeners_OnDisplay.push(listener);
     }
 
