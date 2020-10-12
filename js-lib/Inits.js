@@ -8,7 +8,7 @@ class Inits
     {
         Object.defineProperties(this, {
             app: { value: [] },
-            config: { value: null, writable: true, },
+            configs: { value: [], writable: true, },
             ext: { value: new Map(), },
             layout: { value: new Map(), },
             package: { value: new Map(), },

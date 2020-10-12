@@ -18,9 +18,9 @@ class Config
         this._configInfo = configInfo;
     }
 
-    container(htmlElementId, moduleClass)
+    container(htmlElementId, moduleClass, moduleArgs = [])
     {
-        js0.args(arguments, 'string', 'function');
+        js0.args(arguments, 'string', 'function', [ Array, js0.Default ]);
 
         /* Validate HTML Element */
         let htmlElement = document.getElementById(htmlElementId);
@@ -29,7 +29,7 @@ class Config
 
         /* Create Container */
         let containerInfo = new ContainerInfo(htmlElementId, htmlElement,
-                moduleClass);
+                moduleClass, moduleArgs);
 
         // /* Validate Module Paths */
         // for (let modulePath of containerInfo.modulePath) {            

@@ -34,14 +34,14 @@ export default class App
         return this;
     }
 
-    config(initFn)
+    config(configFn)
     {
         js0.args(arguments, 'function');
 
-        if (this._inits.config !== null)
-            throw new Error('Config already declared.');
+        if (this._initialized)
+            throw new Error('App already initialized.');
 
-        this._inits.config = initFn;
+        this._inits.configs.push(configFn);
 
         return this;
     }

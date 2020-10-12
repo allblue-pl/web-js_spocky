@@ -30,7 +30,8 @@ export default class AppInstance
 
         /* Confit Init */
         let cfg = new Config(this._config);
-        this._inits.config(this, cfg);
+        for (let configFn of this._inits.configs)
+            configFn(this, cfg);
 
         /* App Inits */
         for (let initFn of this._inits.app)
@@ -39,7 +40,12 @@ export default class AppInstance
         /* Containers Init */
         for (let [ containerId, containerInfo ] of this._config.containerInfos) {
             let rootNode = new abNodes.RootNode(containerInfo.htmlElement);
-            let module = new containerInfo.moduleClass();
+            
+            let moduleArgs = [ null ];
+            for (let arg of containerInfo.moduleArgs)
+                moduleArgs.push(arg);
+            let module = new (Function.prototype.bind.apply(
+                    containerInfo.moduleClass, moduleArgs));            
             if (!(module instanceof Module))
                 throw new Error(`Containers '${containerId}' class is not a Spocky module.`);
 
