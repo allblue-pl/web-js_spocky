@@ -44,6 +44,27 @@ export default class FieldsHelper
         return fieldInfo;
     }
 
+    getFieldName(fieldPath, includesPrefix)
+    {
+        js0.args(arguments, 'string', 'boolean');
+
+        if (includesPrefix) {
+            if (fieldPath[0] !== '$')
+                return null;
+
+            if (fieldPath[1] === '{') {
+                if (fieldPath[fieldPath.length - 1] !== '}')
+                    return null;
+
+                return fieldPath.substring(2, fieldPath.length - 1);
+            }
+
+            return fieldPath.substring(1);
+        }
+
+        return fieldPath;
+    }
+
     getType(fieldDefintion)
     {
 
@@ -76,6 +97,15 @@ export default class FieldsHelper
         if (includesPrefix) {
             if (str[0] !== '$')
                 return false;
+
+            if (str[1] === '{') {
+                if (str[str.length - 1] !== '}')
+                    return false;
+
+                return str.substring(2, str.length - 1)
+                        .match(new RegExp(
+                        '^' + this.regexpStrs_FieldName + '$')) !== null;    
+            }
 
             return str.substring(1).match(
                     new RegExp('^' + this.regexpStrs_FieldName + '$')) !== null;

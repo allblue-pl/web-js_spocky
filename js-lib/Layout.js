@@ -1,7 +1,7 @@
 'use strict';
 
 const 
-    abLayouts = require('ab-layouts'),
+    abTextParser = require('ab-text-parser'),
     js0 = require('js0'),
 
     LayoutParser = require('./LayoutParser'),
@@ -11,88 +11,57 @@ const
 class Layout
 {
 
-    static Replace(layoutContent, replaceFrom, replaceTo)
+    static Replace(layoutContent, replaceArr)
     {
-        js0.args(arguments, Array, 'string', 'string');
+        js0.args(arguments, Array, Array);
 
-        Layout._Replace_ReplaceInArray(layoutContent, replaceFrom, replaceTo);
-
-        // for (let index in layoutContent) {
-        //     if (js0.type(layoutContent[index], js0.RawObject)) {
-        //         for (let objectKey in layoutContent[index]) {                    
-        //             if (js0.type(layoutContent[index][objectKey], Array)) {
-        //                 Layout._Replace_ReplaceInArray(layoutContent[index][objectKey], 
-        //                         replaceFrom, replaceTo);
-        //             }
-        //         }
-        //     } else if (js0.type(layoutContent[index], Array))
-        //         Layout.Replace(layoutContent[index], replaceFrom, replaceTo);
-        // }
+        Layout._Replace_ReplaceInArray(layoutContent, replaceArr);
     }
 
-    static _Replace_ReplaceInArray(array, replaceFrom, replaceTo)
+    static _Replace_ReplaceInArray(array, replaceArr)
     {
         for (let i = 0; i < array.length; i++) {
-            if (typeof array[i] === 'string') {     
+            if (typeof array[i] === 'string') {
+                console.log('Before', array[i]);
+
+                let newString = array[i];
+                for (let replace of replaceArr) {
+                    newString = newString.replace(new RegExp(replace[0], 'g'), 
+                            replace[1]);
+                }
+        
+                let newStringArr = abTextParser.parse(newString);
                 
-                let newString = array[i].replace(new RegExp(replaceFrom, 'g'), replaceTo);
-                let newStringArr = Layout._Replace_ParseFields(newString);
-            
+                console.log('After', newStringArr);
+
                 array.splice(i, 1);
                 for (let j = 0; j < newStringArr.length; j++)
                     array.splice(i + j, 0, newStringArr[j]);
-
+        
                 i += newStringArr.length - 1;
             } else if (js0.type(array[i], Array))
-                Layout._Replace_ReplaceInArray(array[i], replaceFrom, replaceTo);
+                Layout._Replace_ReplaceInArray(array[i], replaceArr);
             else if (js0.type(array[i], js0.RawObject))
-                Layout._Replace_ReplaceInObject(array[i], replaceFrom, replaceTo);
+                Layout._Replace_ReplaceInObject(array[i], replaceArr);
         }
     }
 
-    static _Replace_ReplaceInObject(object, replaceFrom, replaceTo)
+    static _Replace_ReplaceInObject(object, replaceArr)
     {
         for (let key in object) {
-            if (js0.type(object[key], 'string'))
-                object[key] = object[key].replace(new RegExp(replaceFrom, 'g'), replaceTo);
-            else if (js0.type(object[key], Array))
-                Layout._Replace_ReplaceInArray(object[key], replaceFrom, replaceTo);
+            if (js0.type(object[key], 'string')) {
+                let newString = object[key];
+                for (let replace of replaceArr) {
+                    newString = newString.replace(new RegExp(replace[0], 'g'), 
+                            replace[1]);
+                }
+
+                object[key] = newString;
+            } else if (js0.type(object[key], Array))
+                Layout._Replace_ReplaceInArray(object[key], replaceArr);
             else if (js0.type(object[key], js0.RawObject))
-                Layout._Replace_ReplaceInObject(object[key], replaceFrom, replaceTo);
+                Layout._Replace_ReplaceInObject(object[key], replaceArr);
         }
-    }
-
-    static _Replace_ParseFields(string)
-    {
-        let lTextsArr = [];
-
-        // if (newString.substring(0, 6) === '$eText')
-        //     console.log('T1', newString);
-
-        let r = /(^|[^\\])\${?([a-zA-Z][a-zA-Z0-9._]*)}?(\(.*\))?/g;
-        let offset = 0;
-        while(true) {
-            let match = r.exec(string);
-            if (match === null)
-                break;
-
-            let index = match[1].length === 0 ?
-                    match.index : match.index + 1;
-
-            let text = string.substring(offset, index);
-            if (text !== '')
-                lTextsArr.push(text);
-
-            let args = typeof match[3] === 'undefined' ? '' : match[3];
-            lTextsArr.push(`$${match[2]}${args}`);
-            offset = match.index + match[0].length;
-        }
-
-        let text = string.substring(offset);
-        if (text !== '')
-            lTextsArr.push(text);
-
-        return lTextsArr;
     }
 
 

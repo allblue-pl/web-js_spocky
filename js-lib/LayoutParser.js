@@ -79,7 +79,7 @@ export default class LayoutParser extends abLayouts.Parser
             return;
         if (nodeInfo.type === '$')
             throw new Error(`'_field' cannot be in virtual node.`);
-        this._fieldsHelper.validateFieldName(nodeInfo.attribs._field[0], false);
+        this._fieldsHelper.validateProperty(nodeInfo.attribs._field[0], false);
 
         let node = element.bottomNode;
 

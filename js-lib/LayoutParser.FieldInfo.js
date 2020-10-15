@@ -59,8 +59,7 @@ export default class FieldInfo
                     this.fieldDefinitions.push(expr_ArgFieldInfo_FD);
             }
         } else if (this.fieldsHelper.isFieldName(fieldPath, includesPrefix)) {
-            if (includesPrefix)
-                fieldPath = fieldPath.substr(1);
+            fieldPath = this.fieldsHelper.getFieldName(fieldPath, includesPrefix);
 
             let fieldMatch = this.fieldsHelper.matchField(fieldPath);
             if (typeof fieldMatch[3] === 'undefined') {
