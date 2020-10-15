@@ -22,8 +22,6 @@ class Layout
     {
         for (let i = 0; i < array.length; i++) {
             if (typeof array[i] === 'string') {
-                console.log('Before', array[i]);
-
                 let newString = array[i];
                 for (let replace of replaceArr) {
                     newString = newString.replace(new RegExp(replace[0], 'g'), 
@@ -31,8 +29,6 @@ class Layout
                 }
         
                 let newStringArr = abTextParser.parse(newString);
-                
-                console.log('After', newStringArr);
 
                 array.splice(i, 1);
                 for (let j = 0; j < newStringArr.length; j++)
