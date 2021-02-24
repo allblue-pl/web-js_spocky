@@ -274,6 +274,7 @@ export default class LayoutParser extends abLayouts.Parser
                 this._runOnUIThread(() => {
                     let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
                             node, keys);
+
                     for (let nodeInstance of nodeInstances)
                         nodeInstance.addAt(index, key);
                 });
