@@ -151,8 +151,7 @@ export default class LayoutParser extends abLayouts.Parser
                         for (let nodeInstance of nodeInstances) {
                             let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
                             nodeInstance.hide = fieldInfo.getValue(
-                                    this._fields, instanceKeys) ? 
-                                    true : false;
+                                    this._fields, instanceKeys) ? true : false;
                         }
                     });
                 },
