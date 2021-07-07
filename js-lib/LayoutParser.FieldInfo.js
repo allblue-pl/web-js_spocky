@@ -3,7 +3,9 @@
 const
     abFields = require('ab-fields'),
     abStrings = require('ab-strings'),
-    js0 = require('js0')
+    js0 = require('js0'),
+
+    spocky = require('.')
 ;
 
 export default class FieldInfo
@@ -44,14 +46,22 @@ export default class FieldInfo
 
             this.expr = fieldPath.substr(2, fieldPath.length - 3);
             this.expr_ArgFields = [];
-            let re = new RegExp('\\$(' + this.fieldsHelper.regexpStrs_FieldName + ')', 'gi');
+            let re = new RegExp('\\${(' + this.fieldsHelper.regexpStrs_FieldName + ')}' +
+                    '|' + '\\$(' + this.fieldsHelper.regexpStrs_FieldName + ')', 'gi');
             let matches = this.expr.matchAll(re);
             for (let match of matches) {
-                let expr_ArgFieldInfo = this.fieldsHelper.def(repeatInfo, match[1], 
+                let fieldMatch = null;
+                if (typeof match[1] !== 'undefined') {
+                    fieldMatch = match[1];
+                } else {
+                    fieldMatch = match[5];
+                }
+
+                let expr_ArgFieldInfo = this.fieldsHelper.def(repeatInfo, fieldMatch, 
                         false, abFields.VarDefinition);
 
                 this.expr_ArgFields.push({
-                    path: match[1],
+                    path: fieldMatch,
                     fieldInfo: expr_ArgFieldInfo,
                 });
                 
@@ -103,7 +113,10 @@ export default class FieldInfo
     {
         for (let argIndex = 0; argIndex < argFields.length; argIndex++) {
             let value = `$argFields[${argIndex}].fieldInfo.getValue($fields, $keys)`;
-            evalStr = evalStr.replace(new RegExp('\\$' + 
+            evalStr = evalStr.replace(new RegExp('\\$\\{' + 
+                    abStrings.escapeRegExpChars(argFields[argIndex].path) + '\\}' +
+                    '([^a-zA-Z0-9]|$)', 'g'), value + '$1');
+            evalStr = evalStr.replace(new RegExp('\\$?' + 
                     abStrings.escapeRegExpChars(argFields[argIndex].path) + 
                     '([^a-zA-Z0-9]|$)', 'g'), value + '$1');
         }
@@ -160,6 +173,8 @@ export default class FieldInfo
             try {
                 return this.getEval(evalStr, this.expr_ArgFields, fields, keys);
             } catch (err) {
+                if (spocky.Debug)
+                    console.error(evalStr);
                 throw new Error(`Error evaluating expression "${this.expr}": ` + err);
             }
         } else

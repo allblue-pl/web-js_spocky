@@ -61,9 +61,9 @@ class Layout
     }
 
 
-    constructor(layoutContent)
+    constructor(layoutContent, defaultFieldValues = {})
     {
-        js0.args(arguments, Array);
+        js0.args(arguments, Array, [ js0.RawObject, js0.Default ]);
         js0.prop(this, Layout.Viewable, this);
 
         let layoutParser = new LayoutParser();
@@ -99,6 +99,10 @@ class Layout
             for (let listener of this._$listeners_OnDisplay)
                 listener(display);
         });
+
+        for (let fieldName in defaultFieldValues) {
+            this.$fields[fieldName] = defaultFieldValues[fieldName];
+        }
     }
 
     $onDisplay(listener)

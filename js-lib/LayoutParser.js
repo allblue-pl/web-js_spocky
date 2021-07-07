@@ -96,7 +96,7 @@ export default class LayoutParser extends abLayouts.Parser
                 change: (value, keys) => {
                     this._runOnUIThread(() => {
                         let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
-                            node, keys);
+                                node, keys);
                         for (let nodeInstance of nodeInstances) {
                             let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
                             nodeInstance.htmlElement.innerHTML = fieldInfo.getValue(
@@ -334,8 +334,9 @@ export default class LayoutParser extends abLayouts.Parser
                         let nodeInstances = this._getNodeInstances(repeatInfo, fieldInfo, 
                                 node, keys);
                         for (let nodeInstance of nodeInstances) {
+                            let instanceKeys = nodeInstance.pCopyable.getInstanceKeys();
                             nodeInstance.show = fieldInfo.getValue(
-                                    this._fields, keys) ? true : false;
+                                    this._fields, instanceKeys) ? true : false;
                         }
                     });
                 },
