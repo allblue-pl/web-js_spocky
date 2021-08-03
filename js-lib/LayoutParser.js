@@ -322,7 +322,7 @@ export default class LayoutParser extends abLayouts.Parser
         let repeatInfo = new RepeatInfo(elementsStack);
         let fieldInfo = this._fieldsHelper.def(repeatInfo, nodeInfo.attribs._show[0],
                 false, abFields.VarDefinition);
-    
+
         /* Default */
         node.show = fieldInfo.getValue(this._fields, []) ? true : false;
 
@@ -444,9 +444,9 @@ export default class LayoutParser extends abLayouts.Parser
     {
         let attrib = '';
         for (let i = 0; i < attribArr.length; i++) {
-            if (attribArr_FieldInfos[i] !== null) 
+            if (attribArr_FieldInfos[i] !== null) {
                 attrib += attribArr_FieldInfos[i].getValue(this._fields, instanceKeys);
-            else
+            } else
                 attrib += attribArr[i];
         }
 

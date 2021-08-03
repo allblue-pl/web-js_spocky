@@ -116,7 +116,7 @@ export default class FieldInfo
             evalStr = evalStr.replace(new RegExp('\\$\\{' + 
                     abStrings.escapeRegExpChars(argFields[argIndex].path) + '\\}' +
                     '([^a-zA-Z0-9]|$)', 'g'), value + '$1');
-            evalStr = evalStr.replace(new RegExp('\\$?' + 
+            evalStr = evalStr.replace(new RegExp('\\$' + 
                     abStrings.escapeRegExpChars(argFields[argIndex].path) + 
                     '([^a-zA-Z0-9]|$)', 'g'), value + '$1');
         }
