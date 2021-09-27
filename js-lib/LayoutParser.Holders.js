@@ -7,6 +7,9 @@ const
 export default class Holders
 {
 
-    
+    constructor()
+    {
+        
+    }
 
 }

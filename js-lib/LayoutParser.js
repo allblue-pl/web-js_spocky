@@ -210,7 +210,7 @@ export default class LayoutParser extends abLayouts.Parser
                 // this._elems._remove(elemName, keys);
 
                 if (element.info.holders_OnDestroyFn !== null) {
-                    element.info.holders_OnDestroyFn(new Holder(node), keys);
+                    element.info.holders_OnDestroyFn(keys);
                 }
             });
 

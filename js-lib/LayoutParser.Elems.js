@@ -25,6 +25,19 @@ export default class Elems {
         return this._get(elemName, keys);
     }
 
+    $index(elemName, keys)
+    {
+        js0.args(arguments, 'string', Array);
+
+        let keySets = this.$keys();
+        for (let i = 0; i < keySets.length; i++) {
+            if (this._keysMatch(keySets[i], keys))
+                return i;
+        }
+
+        return -1;
+    }
+
     $keys(elemName) {
         js0.args(arguments, 'string');
 
