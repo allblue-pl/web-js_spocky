@@ -106,7 +106,9 @@ export default class FieldInfo
 
     getEval($evalStr, $argFields, $fields, $keys)
     {
-        return eval($evalStr);
+        // return eval($evalStr);
+        return Function('"use strict";return function($argFields, $fields, $keys) {' + 
+                'return ' + $evalStr + '}')()($argFields, $fields, $keys);
     }
 
     getEvalStr(evalStr, argFields, fields, keys)
