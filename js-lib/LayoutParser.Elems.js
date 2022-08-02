@@ -16,13 +16,25 @@ export default class Elems {
         return elemName in this._elemInfos;
     }
 
-    $get(elemName, keys) {
+    $get(elemName, keys = []) {
         js0.args(arguments, 'string', Array);
 
         if (!(elemName in this._elemInfos))
             throw new Error(`Elem '${elemName}' does not exist.`);
 
         return this._get(elemName, keys);
+    }
+
+    $getAll(elemName)
+    {
+        js0.args(arguments, 'string');
+
+        let elems = [];
+        let keysSets = this.$keys(elemName);
+        for (let keys of keysSets)
+            elems.push(this.$get(elemName, keys));
+
+        return elems;
     }
 
     $index(elemName, keys)
