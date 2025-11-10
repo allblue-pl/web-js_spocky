@@ -28,7 +28,7 @@ class Layout
                             replace[1]);
                 }
         
-                let newStringArr = abTextParser.parse(newString);
+                let newStringArr = abTextParser.parse(newString, false);
 
                 array.splice(i, 1);
                 for (let j = 0; j < newStringArr.length; j++)
